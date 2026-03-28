@@ -1,13 +1,14 @@
-// AdhkarLibraryView.swift — Personal du'as library from Profile tab
+// AdhkarLibraryView.swift — Personal du'as library (reads from AppState, persisted)
 
 import SwiftUI
 
 struct AdhkarLibraryView: View {
+    @EnvironmentObject var appState: AppState
     @Environment(\.dismiss) var dismiss
-    @State private var customDhikr: [Dhikr] = []
-    @State private var showAddSheet = false
-    @State private var newArabic = ""
+    @State private var showAddSheet   = false
+    @State private var newArabic      = ""
     @State private var newTranslation = ""
+    @State private var newTranslit    = ""
     @State private var newRepetitions = 1
 
     var body: some View {
@@ -15,7 +16,7 @@ struct AdhkarLibraryView: View {
             ZStack {
                 Color.appBackground.ignoresSafeArea()
 
-                if customDhikr.isEmpty {
+                if appState.customDhikr.isEmpty {
                     VStack(spacing: 16) {
                         Text("📚")
                             .font(.system(size: 60))
@@ -45,19 +46,22 @@ struct AdhkarLibraryView: View {
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
-                    ScrollView {
-                        LazyVStack(spacing: 12) {
-                            ForEach(customDhikr) { dhikr in
-                                DhikrCardView(
-                                    dhikr: dhikr,
-                                    isEditMode: false,
-                                    onIncrement: {},
-                                    onToggleVisibility: {}
-                                )
-                            }
+                    List {
+                        ForEach(appState.customDhikr) { dhikr in
+                            DhikrCardView(
+                                dhikr: dhikr,
+                                isEditMode: false,
+                                onIncrement: {},
+                                onToggleVisibility: {}
+                            )
+                            .listRowBackground(Color.appBackground)
+                            .listRowSeparator(.hidden)
+                            .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                         }
-                        .padding(16)
+                        .onDelete { appState.deleteCustomDhikr(at: $0) }
                     }
+                    .listStyle(.plain)
+                    .background(Color.appBackground)
                 }
             }
             .navigationTitle("Adhkar Library")
@@ -80,30 +84,30 @@ struct AdhkarLibraryView: View {
         .sheet(isPresented: $showAddSheet) {
             AddDhikrSheet(
                 arabic: $newArabic,
+                transliteration: $newTranslit,
                 translation: $newTranslation,
                 repetitions: $newRepetitions
             ) {
-                if !newArabic.isEmpty {
-                    customDhikr.append(Dhikr(
-                        arabic: newArabic,
-                        transliteration: "",
-                        translation: newTranslation,
-                        repetitions: newRepetitions,
-                        category: .custom
-                    ))
-                    newArabic = ""
-                    newTranslation = ""
-                    newRepetitions = 1
-                }
+                guard !newArabic.isEmpty else { return }
+                let dhikr = Dhikr(
+                    arabic: newArabic,
+                    transliteration: newTranslit,
+                    translation: newTranslation,
+                    repetitions: newRepetitions,
+                    category: .custom
+                )
+                appState.addCustomDhikr(dhikr)
+                newArabic = ""; newTranslit = ""; newTranslation = ""; newRepetitions = 1
             }
         }
     }
 }
 
-// MARK: - Add Dhikr Sheet
+// MARK: - Add Sheet
 struct AddDhikrSheet: View {
     @Environment(\.dismiss) var dismiss
     @Binding var arabic: String
+    @Binding var transliteration: String
     @Binding var translation: String
     @Binding var repetitions: Int
     let onSave: () -> Void
@@ -111,18 +115,22 @@ struct AddDhikrSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Arabic Text") {
+                Section("Arabic Text *") {
                     TextField("Enter Arabic text...", text: $arabic, axis: .vertical)
                         .font(.system(size: AppFont.arabicMedium))
                         .environment(\.layoutDirection, .rightToLeft)
                         .lineLimit(3...8)
                 }
+                Section("Transliteration (Optional)") {
+                    TextField("e.g. Bismillah...", text: $transliteration, axis: .vertical)
+                        .lineLimit(2...4)
+                }
                 Section("Translation (Optional)") {
-                    TextField("Enter translation...", text: $translation, axis: .vertical)
+                    TextField("Enter translation or meaning...", text: $translation, axis: .vertical)
                         .lineLimit(2...5)
                 }
                 Section("Repetitions") {
-                    Stepper("\(repetitions)×", value: $repetitions, in: 1...1000)
+                    Stepper("\(repetitions)×", value: $repetitions, in: 1...10000)
                 }
             }
             .navigationTitle("Add Du'a")
@@ -148,4 +156,5 @@ struct AddDhikrSheet: View {
 
 #Preview {
     AdhkarLibraryView()
+        .environmentObject(AppState())
 }

@@ -1,12 +1,12 @@
-// ProfileView.swift — User profile, settings, library, progress
+// ProfileView.swift — User profile, settings, library, progress (v2)
 
 import SwiftUI
 
 struct ProfileView: View {
     @EnvironmentObject var appState: AppState
-    @Environment(\.colorScheme) var colorScheme
-    @State private var showLibrary = false
-    @State private var showProgress = false
+    @State private var showLibrary      = false
+    @State private var showProgress     = false
+    @State private var showSettings     = false
     @State private var showLogoutConfirm = false
 
     var body: some View {
@@ -42,13 +42,11 @@ struct ProfileView: View {
 
                     // Profile card
                     VStack(spacing: 0) {
-                        // Green banner
                         Rectangle()
                             .fill(Color.primaryGreen)
                             .frame(height: 70)
                             .cornerRadius(AppRadius.md, corners: [.topLeft, .topRight])
 
-                        // Avatar + name
                         HStack(alignment: .top, spacing: 16) {
                             ZStack {
                                 RoundedRectangle(cornerRadius: 14)
@@ -75,10 +73,26 @@ struct ProfileView: View {
                             .padding(.top, 8)
 
                             Spacer()
+
+                            // Streak pill
+                            HStack(spacing: 4) {
+                                Text("🔥")
+                                    .font(.system(size: 16))
+                                Text("\(appState.streakCount)")
+                                    .font(.system(size: 16, weight: .bold))
+                                    .foregroundColor(Color(hex: "F59E0B"))
+                                Text("day streak")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.textSecondary)
+                            }
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(Color(hex: "FFF3CD"))
+                            .cornerRadius(AppRadius.full)
+                            .padding(.top, 8)
                         }
                         .padding(.horizontal, 16)
                         .padding(.bottom, 16)
-                        .offset(y: 0)
                     }
                     .background(Color.cardBackground)
                     .cornerRadius(AppRadius.md)
@@ -88,28 +102,41 @@ struct ProfileView: View {
                     .padding(.bottom, 20)
 
                     // App info row
-                    ProfileRowItem(
-                        iconImage: "AppLogoRow",
-                        title: "Adhkar AI",
-                        subtitle: "Your daily dhikr companion",
-                        useGradientIcon: true
-                    ) {}
+                    HStack(spacing: 14) {
+                        AppLogoView(size: 42)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Adhkar AI")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundColor(.textPrimary)
+                            Text("Your daily dhikr companion")
+                                .font(.system(size: 12))
+                                .foregroundColor(.textSecondary)
+                        }
+                        Spacer()
+                    }
+                    .padding(14)
+                    .background(Color.cardBackground)
+                    .cornerRadius(AppRadius.md)
+                    .cardShadow()
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 10)
 
-                    // Feature rows
+                    // Feature navigation rows
                     VStack(spacing: 10) {
                         ProfileNavigationRow(
                             icon: "books.vertical",
                             iconColor: Color(hex: "EC4899"),
                             title: "Adhkar Library",
-                            subtitle: "Create & manage your personal du'as"
+                            subtitle: "Create & manage your personal du'as",
+                            badge: appState.customDhikr.isEmpty ? nil : "\(appState.customDhikr.count)"
                         ) { showLibrary = true }
 
                         ProfileNavigationRow(
                             icon: "graduationcap",
-                            iconColor: Color(hex: "1B8338"),
+                            iconColor: Color.primaryGreen,
                             title: "Mastery",
                             subtitle: "Track your memorization journey"
-                        ) { /* switch to mastery tab */ }
+                        ) {}
 
                         ProfileNavigationRow(
                             icon: "chart.bar.fill",
@@ -117,13 +144,19 @@ struct ProfileView: View {
                             title: "My Progress",
                             subtitle: "View daily completion stats"
                         ) { showProgress = true }
+
+                        ProfileNavigationRow(
+                            icon: "bell.fill",
+                            iconColor: Color(hex: "F59E0B"),
+                            title: "Notifications & Settings",
+                            subtitle: appState.notificationsEnabled ? "Reminders are on" : "Tap to set up reminders"
+                        ) { showSettings = true }
                     }
                     .padding(.horizontal, 16)
                     .padding(.bottom, 20)
 
-                    // Settings
+                    // Dev settings
                     VStack(spacing: 10) {
-                        // Offline mode toggle
                         HStack(spacing: 14) {
                             ZStack {
                                 RoundedRectangle(cornerRadius: 10)
@@ -134,10 +167,10 @@ struct ProfileView: View {
                                     .foregroundColor(.textSecondary)
                             }
                             VStack(alignment: .leading, spacing: 3) {
-                                Text("Offline Mode (Dev)")
+                                Text("Offline Mode")
                                     .font(.system(size: 15, weight: .semibold))
                                     .foregroundColor(.textPrimary)
-                                Text("Bypass Supabase auth for testing")
+                                Text("Bypass Supabase auth for local testing")
                                     .font(.system(size: 12))
                                     .foregroundColor(.textSecondary)
                             }
@@ -151,18 +184,13 @@ struct ProfileView: View {
                         .cornerRadius(AppRadius.md)
                         .cardShadow()
 
-                        // App version
                         Text("Adhkar AI · v1.0.0")
                             .font(.system(size: 12))
                             .foregroundColor(.textSecondary)
-                            .padding(.top, 4)
                     }
                     .padding(.horizontal, 16)
 
-                    // Logout
-                    Button {
-                        showLogoutConfirm = true
-                    } label: {
+                    Button { showLogoutConfirm = true } label: {
                         Text("Sign Out")
                             .font(.system(size: 15, weight: .medium))
                             .foregroundColor(.red)
@@ -175,9 +203,15 @@ struct ProfileView: View {
         }
         .sheet(isPresented: $showLibrary) {
             AdhkarLibraryView()
+                .environmentObject(appState)
         }
         .sheet(isPresented: $showProgress) {
             MyProgressView()
+                .environmentObject(appState)
+        }
+        .sheet(isPresented: $showSettings) {
+            SettingsView()
+                .environmentObject(appState)
         }
         .confirmationDialog("Sign out?", isPresented: $showLogoutConfirm) {
             Button("Sign Out", role: .destructive) { appState.logout() }
@@ -186,48 +220,13 @@ struct ProfileView: View {
     }
 }
 
-// MARK: - Profile Row
-struct ProfileRowItem: View {
-    let iconImage: String
-    let title: String
-    let subtitle: String
-    var useGradientIcon: Bool = false
-    let action: () -> Void
-
-    var body: some View {
-        HStack(spacing: 14) {
-            if useGradientIcon {
-                AppLogoView(size: 42)
-            } else {
-                Image(systemName: iconImage)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 24, height: 24)
-            }
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundColor(.textPrimary)
-                Text(subtitle)
-                    .font(.system(size: 12))
-                    .foregroundColor(.textSecondary)
-            }
-            Spacer()
-        }
-        .padding(14)
-        .background(Color.cardBackground)
-        .cornerRadius(AppRadius.md)
-        .cardShadow()
-        .padding(.horizontal, 16)
-        .padding(.bottom, 10)
-    }
-}
-
+// MARK: - Navigation Row (updated with optional badge)
 struct ProfileNavigationRow: View {
     let icon: String
     let iconColor: Color
     let title: String
     let subtitle: String
+    var badge: String? = nil
     let action: () -> Void
 
     var body: some View {
@@ -250,6 +249,15 @@ struct ProfileNavigationRow: View {
                         .foregroundColor(.textSecondary)
                 }
                 Spacer()
+                if let badge {
+                    Text(badge)
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(Color.primaryGreen)
+                        .cornerRadius(AppRadius.full)
+                }
                 Image(systemName: "chevron.right")
                     .font(.system(size: 13, weight: .medium))
                     .foregroundColor(.textSecondary)
@@ -263,7 +271,7 @@ struct ProfileNavigationRow: View {
     }
 }
 
-// MARK: - Rounded corners helper
+// MARK: - Corner radius helper (keep here to avoid duplicate)
 extension View {
     func cornerRadius(_ radius: CGFloat, corners: UIRectCorner) -> some View {
         clipShape(RoundedCorner(radius: radius, corners: corners))
@@ -274,8 +282,11 @@ struct RoundedCorner: Shape {
     var radius: CGFloat = .infinity
     var corners: UIRectCorner = .allCorners
     func path(in rect: CGRect) -> Path {
-        let path = UIBezierPath(roundedRect: rect, byRoundingCorners: corners,
-                                cornerRadii: CGSize(width: radius, height: radius))
+        let path = UIBezierPath(
+            roundedRect: rect,
+            byRoundingCorners: corners,
+            cornerRadii: CGSize(width: radius, height: radius)
+        )
         return Path(path.cgPath)
     }
 }
