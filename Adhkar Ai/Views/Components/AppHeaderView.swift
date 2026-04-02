@@ -31,14 +31,17 @@ struct AppHeaderView: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
         .background(
-            // Glassmorphism blur
-            ZStack {
-                Color.white.opacity(0.7)
-                Color(UIColor.systemBackground).opacity(0.3)
+            ZStack(alignment: .bottom) {
+                Rectangle()
+                    .fill(.ultraThinMaterial)
+                    .ignoresSafeArea(edges: .top)
+                
+                // Subtle hairline divider for separation only when content scrolls under
+                Rectangle()
+                    .fill(Color.divider.opacity(0.3))
+                    .frame(height: 0.5)
             }
         )
-        .background(.ultraThinMaterial)
-        .shadow(color: .black.opacity(0.06), radius: 6, x: 0, y: 2)
     }
 }
 

@@ -23,10 +23,10 @@ struct MorningView: View {
         ZStack(alignment: .top) {
             Color.appBackground.ignoresSafeArea()
 
-            ScrollView {
+            ScrollView(showsIndicators: false) {
                 VStack(spacing: 0) {
-                    // Header spacer (for fixed header)
-                    Color.clear.frame(height: 64)
+                    // Header spacer (for fixed glass header + status bar)
+                    Color.clear.frame(height: 110)
 
                     // Page header
                     VStack(spacing: 0) {
@@ -159,7 +159,8 @@ struct MorningView: View {
                                 dhikr: dhikr,
                                 isEditMode: appState.isMorningEditMode,
                                 onIncrement: { appState.incrementMorning(id: dhikr.id) },
-                                onToggleVisibility: { appState.toggleMorningVisibility(id: dhikr.id) }
+                                onToggleVisibility: { appState.toggleMorningVisibility(id: dhikr.id) },
+                                onReset: { appState.resetIndividualMorning(id: dhikr.id) }
                             )
                         }
                     }
@@ -176,10 +177,10 @@ struct MorningView: View {
                         }
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(.textSecondary)
-                        .padding(.vertical, 12)
-                    }
-                    .padding(.top, 8)
-                    .padding(.bottom, 24)
+                    .padding(.bottom, 8)
+                    
+                    // Bottom spacer for floating nav pill
+                    Color.clear.frame(height: 100)
                 }
             }
         }

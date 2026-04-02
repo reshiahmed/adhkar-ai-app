@@ -5,22 +5,31 @@ import SwiftUI
 struct MasteryView: View {
     @EnvironmentObject var appState: AppState
 
-    // Mock mastery data — in v1 derived from morning/evening progress
-    private var totalAdhkar: Int { appState.morningAdhkar.count + appState.eveningAdhkar.count }
-    private var reviewed: Int { appState.morningCompleted + appState.eveningCompleted }
-    private var memorized: Int { max(0, reviewed - 3) }
-    private var dueToday: Int { max(0, totalAdhkar - reviewed) }
+    // Actual mastery data
+    private var totalAdhkar: Int { (appState.morningAdhkar + appState.eveningAdhkar).filter { $0.isVisible }.count }
+    private var reviewedCount: Int { appState.morningCompleted + appState.eveningCompleted }
+    private var memorizedCount: Int { appState.memorizedCount }
+    private var dueTodayCount: Int { appState.itemsDueToday.count }
     private var overallProgress: Double {
-        totalAdhkar > 0 ? Double(reviewed) / Double(totalAdhkar) : 0
+        totalAdhkar > 0 ? Double(memorizedCount) / Double(totalAdhkar) : 0
+    }
+    
+    @State private var sessionToShow: SessionConfig?
+    
+    struct SessionConfig: Identifiable {
+        let id = UUID()
+        let items: [Dhikr]
+        let mode: MasterySessionView.MasteryMode
     }
 
     var body: some View {
         ZStack(alignment: .top) {
             Color.appBackground.ignoresSafeArea()
 
-            ScrollView {
+            ScrollView(showsIndicators: false) {
                 VStack(spacing: 0) {
-                    Color.clear.frame(height: 64)
+                    // Header spacer (for fixed glass header + status bar)
+                    Color.clear.frame(height: 110)
 
                     // Header
                     VStack(alignment: .leading, spacing: 4) {
@@ -40,12 +49,48 @@ struct MasteryView: View {
 
                     // Stats row
                     HStack(spacing: 12) {
-                        MasteryStatCard(value: reviewed, label: "Reviewed", color: .primaryGreen)
-                        MasteryStatCard(value: memorized, label: "Memorized", color: Color(hex: "7C3AED"))
-                        MasteryStatCard(value: dueToday, label: "Due Today", color: Color(hex: "D97706"))
+                        MasteryStatCard(value: reviewedCount, label: "Reviewed", color: .primaryGreen)
+                        MasteryStatCard(value: memorizedCount, label: "Memorized", color: Color(hex: "7C3AED"))
+                        MasteryStatCard(value: dueTodayCount, label: "Due Today", color: Color(hex: "D97706"))
                     }
                     .padding(.horizontal, 16)
                     .padding(.bottom, 20)
+                    
+                    // Main Action Area
+                    if dueTodayCount > 0 {
+                        Button {
+                            sessionToShow = SessionConfig(items: appState.itemsDueToday, mode: .review)
+                        } label: {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Start Daily Session")
+                                        .font(.system(size: 18, weight: .bold))
+                                    Text("\(dueTodayCount) items are waiting for review")
+                                        .font(.system(size: 13))
+                                        .opacity(0.8)
+                                }
+                                Spacer()
+                                Image(systemName: "play.fill")
+                                    .font(.system(size: 20))
+                                    .padding(12)
+                                    .background(Color.white.opacity(0.2))
+                                    .clipShape(Circle())
+                            }
+                            .foregroundColor(.white)
+                            .padding(24)
+                            .background(
+                                LinearGradient(
+                                    colors: [Color.primaryGreen, Color(hex: "3CB87A")],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .cornerRadius(24)
+                            .cardShadow()
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 28)
+                    }
 
                     // Progress wheel
                     ZStack {
@@ -86,15 +131,25 @@ struct MasteryView: View {
                             .padding(.bottom, 14)
 
                         ForEach(MasteryCategory.allCases) { cat in
-                            MasteryCategoryRow(category: cat)
-                                .padding(.horizontal, 16)
-                                .padding(.bottom, 10)
+                            MasteryCategoryRow(category: cat) { mode in
+                                let items = appState.dueItems(for: cat.adhkarCategory)
+                                if items.isEmpty {
+                                    // Handle no items due? (Allow practice anyway set in mode?)
+                                }
+                                sessionToShow = SessionConfig(items: items, mode: mode)
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.bottom, 10)
                         }
                     }
 
-                    Spacer().frame(height: 24)
+                    // Bottom spacer for floating nav pill
+                    Color.clear.frame(height: 100)
                 }
             }
+        }
+        .sheet(item: $sessionToShow) { config in
+            MasterySessionView(items: config.items, mode: config.mode)
         }
     }
 }
@@ -136,6 +191,15 @@ enum MasteryCategory: String, CaseIterable, Identifiable {
         case .daily:   return "clock"
         }
     }
+    
+    var adhkarCategory: AdhkarCategory {
+        switch self {
+        case .morning: return .morning
+        case .evening: return .evening
+        case .daily:   return .mosque // Placeholder
+        }
+    }
+
     var color: Color {
         switch self {
         case .morning: return Color(hex: "F59E0B")
@@ -147,7 +211,7 @@ enum MasteryCategory: String, CaseIterable, Identifiable {
 
 struct MasteryCategoryRow: View {
     let category: MasteryCategory
-    @State private var showComingSoon = false
+    let onStartSession: (MasterySessionView.MasteryMode) -> Void
 
     var body: some View {
         HStack(spacing: 12) {
@@ -169,7 +233,7 @@ struct MasteryCategoryRow: View {
 
             HStack(spacing: 8) {
                 Button {
-                    showComingSoon = true
+                    onStartSession(.review)
                 } label: {
                     Text("Review")
                         .font(.system(size: 13, weight: .semibold))
@@ -180,7 +244,7 @@ struct MasteryCategoryRow: View {
                         .cornerRadius(AppRadius.full)
                 }
                 Button {
-                    showComingSoon = true
+                    onStartSession(.test)
                 } label: {
                     Text("Test")
                         .font(.system(size: 13, weight: .semibold))
@@ -196,11 +260,6 @@ struct MasteryCategoryRow: View {
         .background(Color.cardBackground)
         .cornerRadius(AppRadius.md)
         .cardShadow()
-        .alert("Coming Soon", isPresented: $showComingSoon) {
-            Button("OK") {}
-        } message: {
-            Text("Spaced repetition review will be available in v2.")
-        }
     }
 }
 

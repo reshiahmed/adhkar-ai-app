@@ -7,6 +7,7 @@ struct AdhkarData {
     // MARK: - Morning Adhkar (13 entries, matching PWA)
     static let morning: [Dhikr] = [
         Dhikr(
+            id: "m1",
             arabic: "اللَّهُمَّ أَنْتَ رَبِّي لَا إِلَهَ إِلَّا أَنْتَ، خَلَقْتَنِي وَأَنَا عَبْدُكَ، وَأَنَا عَلَى عَهْدِكَ وَوَعْدِكَ مَا اسْتَطَعْتُ، أَعُوذُ بِكَ مِنْ شَرِّ مَا صَنَعْتُ، أَبُوءُ لَكَ بِنِعْمَتِكَ عَلَيَّ، وَأَبُوءُ بِذَنْبِي فَاغْفِرْ لِي فَإِنَّهُ لَا يَغْفِرُ الذُّنُوبَ إِلَّا أَنْتَ",
             transliteration: "Allahumma anta rabbee la ilaha illa ant, khalaqtanee wa ana 'abduk, wa ana 'ala 'ahdika wa w'adika masta-ta'tu, a'uthubika min sharri ma sana'tu, abu-u laka bi ni'matika 'alayya, wa abu-u bi-dhambi, faghfirlee finnahu laa yaghfirudh-dhunooba illa ant",
             translation: "O Allah! You are my Lord; none has the right to be worshipped but You. You created me and I am Your slave, and I am faithful to my covenant and my promise as much as I can. I seek refuge with You from all the evil I have done. I acknowledge before You all the blessings You have bestowed upon me, and I confess to You all my sins. So forgive me, for verily none can forgive sins except You.",
@@ -15,6 +16,7 @@ struct AdhkarData {
             category: .morning
         ),
         Dhikr(
+            id: "m2",
             arabic: "أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ، لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ",
             transliteration: "Asbahna wa asbahal mulku lillah, walhamdu lillah, la ilaha illallah wahdahu la shareeka lah, lahul mulku wa lahul hamdu wa huwa 'ala kulli shay'in qadeer",
             translation: "We have reached the morning and at this very time all sovereignty belongs to Allah. All praise is due to Allah. None has the right to be worshipped except Allah, alone, without partner, to Him belongs all sovereignty and praise and He is over all things omnipotent.",
@@ -23,6 +25,7 @@ struct AdhkarData {
             category: .morning
         ),
         Dhikr(
+            id: "m3",
             arabic: "اللَّهُمَّ بِكَ أَصْبَحْنَا، وَبِكَ أَمْسَيْنَا، وَبِكَ نَحْيَا، وَبِكَ نَمُوتُ وَإِلَيْكَ النُّشُورُ",
             transliteration: "Allahumma bika asbahna, wa bika amsayna, wa bika nahya, wa bika namootu wa ilaikan-nushoor",
             translation: "O Allah, by You we enter the morning and by You we enter the evening, by You we live and by You we die, and to You is the resurrection.",
@@ -31,6 +34,7 @@ struct AdhkarData {
             category: .morning
         ),
         Dhikr(
+            id: "m4",
             arabic: "اللَّهُمَّ أَنْتَ رَبِّي لَا إِلَهَ إِلَّا أَنْتَ، عَلَيْكَ تَوَكَّلْتُ وَأَنْتَ رَبُّ الْعَرْشِ الْعَظِيمِ",
             transliteration: "Allahumma anta rabbee la ilaha illa ant, 'alayka tawakkaltu wa anta rabbul 'arshil 'azeem",
             translation: "O Allah, You are my Lord, there is none worthy of worship but You, upon You I rely and You are the Lord of the Magnificent Throne.",
@@ -39,6 +43,7 @@ struct AdhkarData {
             category: .morning
         ),
         Dhikr(
+            id: "m5",
             arabic: "بِسْمِ اللَّهِ الَّذِي لَا يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الْأَرْضِ وَلَا فِي السَّمَاءِ وَهُوَ السَّمِيعُ الْعَلِيمُ",
             transliteration: "Bismillahil-lathee la yadurru ma'asmihi shay'un fil-ardi wa la fis-sama'i, wa huwas-samee'ul-'aleem",
             translation: "In the name of Allah with Whose name nothing can cause harm in the earth or in the heavens, and He is the All-Hearing, the All-Knowing.",
@@ -47,6 +52,7 @@ struct AdhkarData {
             category: .morning
         ),
         Dhikr(
+            id: "m6",
             arabic: "رَضِيتُ بِاللَّهِ رَبًّا، وَبِالْإِسْلاَمِ دِينًا، وَبِمُحَمَّدٍ صَلَى اللهُ عَلَيهِ وَسَلَّمَ نَبِيًّا",
             transliteration: "Radeetu billahi rabban, wa bil-islami deenan, wa bi-Muhammadin sallallahu 'alayhi wa sallama nabiyyan",
             translation: "I am pleased with Allah as a Lord, and Islam as a religion and Muhammad (peace be upon him) as a Prophet.",
@@ -55,6 +61,7 @@ struct AdhkarData {
             category: .morning
         ),
         Dhikr(
+            id: "m7",
             arabic: "يَا حَيُّ يَا قَيُّومُ بِرَحْمَتِكَ أَسْتَغِيثُ، أَصْلِحْ لِي شَأْنِي كُلَّهُ وَلَا تَكِلْنِي إِلَى نَفْسِي طَرْفَةَ عَيْنٍ",
             transliteration: "Ya Hayyu ya Qayyoom, bi rahmatika astaghees, aslih lee sha'nee kullahu wa la takilnee ila nafsee tarfata 'ayn",
             translation: "O Ever Living, O Self-Sustaining and Supporter of all, by Your mercy I seek assistance, rectify for me all of my affairs and do not leave me to myself, even for the blink of an eye.",
@@ -63,6 +70,7 @@ struct AdhkarData {
             category: .morning
         ),
         Dhikr(
+            id: "m8",
             arabic: "أَصْبَحْنَا عَلَى فِطْرَةِ الإِسْلاَمِ وَعَلَى كَلِمَةِ الإِخْلاَصِ وَعَلَى دِينِ نَبِيِّنَا مُحَمَّدٍ صَلَّى اللهُ عَلَيْهِ وَسَلَّمَ وَعَلَى مِلَّةِ أَبِينَا إِبْرَاهِيمَ حَنِيفًا مُسْلِمًا وَمَا كَانَ مِنَ الْمُشْرِكِينَ",
             transliteration: "Asbahna 'ala fitratil-islam, wa 'ala kalimatil-ikhlas, wa 'ala dini nabiyyina Muhammadin sallallahu 'alayhi wa sallam, wa 'ala millati abeena Ibraheema haneefam-musliman wa ma kana minal-mushrikeen",
             translation: "We rise upon the fitrah (natural disposition) of Islam, and the word of sincere devotion, and upon the religion of our Prophet Muhammad (peace be upon him) and the religion of our forefather Ibrahim, who was a Muslim and of true faith and was not of those who associate partners with Allah.",
@@ -115,6 +123,7 @@ struct AdhkarData {
     // MARK: - Evening Adhkar (15 entries, matching PWA)
     static let evening: [Dhikr] = [
         Dhikr(
+            id: "e1",
             arabic: "اللَّهُمَّ أَنْتَ رَبِّي لَا إِلَهَ إِلَّا أَنْتَ، خَلَقْتَنِي وَأَنَا عَبْدُكَ، وَأَنَا عَلَى عَهْدِكَ وَوَعْدِكَ مَا اسْتَطَعْتُ، أَعُوذُ بِكَ مِنْ شَرِّ مَا صَنَعْتُ، أَبُوءُ لَكَ بِنِعْمَتِكَ عَلَيَّ، وَأَبُوءُ بِذَنْبِي فَاغْفِرْ لِي فَإِنَّهُ لَا يَغْفِرُ الذُّنُوبَ إِلَّا أَنْتَ",
             transliteration: "Allahumma anta rabbee la ilaha illa ant...",
             translation: "O Allah! You are my Lord; none has the right to be worshipped but You. You created me and I am Your slave...",

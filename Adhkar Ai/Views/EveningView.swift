@@ -23,9 +23,10 @@ struct EveningView: View {
         ZStack(alignment: .top) {
             Color.appBackground.ignoresSafeArea()
 
-            ScrollView {
+            ScrollView(showsIndicators: false) {
                 VStack(spacing: 0) {
-                    Color.clear.frame(height: 64)
+                    // Header spacer (for fixed glass header + status bar)
+                    Color.clear.frame(height: 110)
 
                     // Page header
                     VStack(spacing: 0) {
@@ -146,7 +147,8 @@ struct EveningView: View {
                                 dhikr: dhikr,
                                 isEditMode: appState.isEveningEditMode,
                                 onIncrement: { appState.incrementEvening(id: dhikr.id) },
-                                onToggleVisibility: { appState.toggleEveningVisibility(id: dhikr.id) }
+                                onToggleVisibility: { appState.toggleEveningVisibility(id: dhikr.id) },
+                                onReset: { appState.resetIndividualEvening(id: dhikr.id) }
                             )
                         }
                     }
@@ -162,10 +164,10 @@ struct EveningView: View {
                         }
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(.textSecondary)
-                        .padding(.vertical, 12)
-                    }
-                    .padding(.top, 8)
-                    .padding(.bottom, 24)
+                    .padding(.bottom, 8)
+                    
+                    // Bottom spacer for floating nav pill
+                    Color.clear.frame(height: 100)
                 }
             }
         }

@@ -7,15 +7,17 @@ struct ProfileView: View {
     @Environment(\.colorScheme) var colorScheme
     @State private var showLibrary = false
     @State private var showProgress = false
+    @State private var showSettings = false
     @State private var showLogoutConfirm = false
 
     var body: some View {
         ZStack(alignment: .top) {
             Color.appBackground.ignoresSafeArea()
 
-            ScrollView {
+            ScrollView(showsIndicators: false) {
                 VStack(spacing: 0) {
-                    Color.clear.frame(height: 64)
+                    // Header spacer (for fixed glass header + status bar)
+                    Color.clear.frame(height: 110)
 
                     // Offline banner
                     if appState.isOfflineMode {
@@ -94,84 +96,106 @@ struct ProfileView: View {
                         subtitle: "Your daily dhikr companion",
                         useGradientIcon: true
                     ) {}
-
-                    // Feature rows
-                    VStack(spacing: 10) {
+                    // Nav Categories
+                    VStack(spacing: 12) {
                         ProfileNavigationRow(
-                            icon: "books.vertical",
+                            icon: "gearshape.fill",
+                            iconColor: .primaryGreen,
+                            title: "App Settings",
+                            subtitle: "Arabic font size, style & visuals"
+                        ) { showSettings = true }
+
+                        ProfileNavigationRow(
+                            icon: "books.vertical.fill",
                             iconColor: Color(hex: "EC4899"),
                             title: "Adhkar Library",
-                            subtitle: "Create & manage your personal du'as"
+                            subtitle: "Sync & manage personal du'as"
                         ) { showLibrary = true }
-
-                        ProfileNavigationRow(
-                            icon: "graduationcap",
-                            iconColor: Color(hex: "1B8338"),
-                            title: "Mastery",
-                            subtitle: "Track your memorization journey"
-                        ) { /* switch to mastery tab */ }
 
                         ProfileNavigationRow(
                             icon: "chart.bar.fill",
                             iconColor: Color(hex: "3B82F6"),
                             title: "My Progress",
-                            subtitle: "View daily completion stats"
+                            subtitle: "View detailed completion history"
                         ) { showProgress = true }
                     }
                     .padding(.horizontal, 16)
-                    .padding(.bottom, 20)
+                    .padding(.bottom, 24)
 
-                    // Settings
-                    VStack(spacing: 10) {
-                        // Offline mode toggle
-                        HStack(spacing: 14) {
-                            ZStack {
-                                RoundedRectangle(cornerRadius: 10)
-                                    .fill(Color.gray.opacity(0.12))
-                                    .frame(width: 42, height: 42)
-                                Image(systemName: "wifi.slash")
-                                    .font(.system(size: 18))
-                                    .foregroundColor(.textSecondary)
-                            }
-                            VStack(alignment: .leading, spacing: 3) {
-                                Text("Offline Mode (Dev)")
-                                    .font(.system(size: 15, weight: .semibold))
-                                    .foregroundColor(.textPrimary)
-                                Text("Bypass Supabase auth for testing")
-                                    .font(.system(size: 12))
-                                    .foregroundColor(.textSecondary)
-                            }
-                            Spacer()
-                            Toggle("", isOn: $appState.isOfflineMode)
-                                .tint(.primaryGreen)
-                                .labelsHidden()
-                        }
-                        .padding(14)
-                        .background(Color.cardBackground)
-                        .cornerRadius(AppRadius.md)
-                        .cardShadow()
-
-                        // App version
-                        Text("Adhkar AI · v1.0.0")
-                            .font(.system(size: 12))
+                    // Developer & Account Section
+                    VStack(alignment: .leading, spacing: 14) {
+                        Text("Account & Developer")
+                            .font(.system(size: 14, weight: .bold))
                             .foregroundColor(.textSecondary)
-                            .padding(.top, 4)
-                    }
-                    .padding(.horizontal, 16)
+                            .padding(.horizontal, 16)
 
-                    // Logout
-                    Button {
-                        showLogoutConfirm = true
-                    } label: {
-                        Text("Sign Out")
-                            .font(.system(size: 15, weight: .medium))
-                            .foregroundColor(.red)
-                            .padding(.vertical, 12)
+                        VStack(spacing: 0) {
+                            // Offline Mode
+                            HStack(spacing: 14) {
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .fill(Color.gray.opacity(0.1))
+                                        .frame(width: 42, height: 42)
+                                    Image(systemName: "wifi.slash")
+                                        .font(.system(size: 18))
+                                        .foregroundColor(.textSecondary)
+                                }
+                                Text("Offline Mode (Dev)")
+                                    .font(.system(size: 15, weight: .medium))
+                                    .foregroundColor(.textPrimary)
+                                Spacer()
+                                Toggle("", isOn: $appState.isOfflineMode)
+                                    .tint(.primaryGreen)
+                                    .labelsHidden()
+                            }
+                            .padding(14)
+
+                            Divider().padding(.leading, 64)
+
+                            // Sign Out
+                            Button {
+                                showLogoutConfirm = true
+                            } label: {
+                                HStack(spacing: 14) {
+                                    ZStack {
+                                        RoundedRectangle(cornerRadius: 10)
+                                            .fill(Color.red.opacity(0.1))
+                                            .frame(width: 42, height: 42)
+                                        Image(systemName: "power")
+                                            .font(.system(size: 18, weight: .bold))
+                                            .foregroundColor(.red)
+                                    }
+                                    Text("Sign Out")
+                                        .font(.system(size: 15, weight: .medium))
+                                        .foregroundColor(.red)
+                                    Spacer()
+                                }
+                            }
+                            .padding(14)
+                        }
+                        .background(Color.cardBackground)
+                        .cornerRadius(16)
+                        .cardShadow()
+                        .padding(.horizontal, 16)
                     }
-                    .padding(.top, 16)
-                    .padding(.bottom, 32)
+                    .padding(.bottom, 24)
+
+                    // App Version Footer
+                    VStack(spacing: 6) {
+                        Text("Adhkar AI · v1.1.0")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(.textSecondary)
+                        Text("By Reshi Ahmed")
+                            .font(.system(size: 11))
+                            .foregroundColor(.textSecondary.opacity(0.6))
+                    }
+                    .padding(.top, 8)
+                    .padding(.bottom, 100) // Spacer for floating nav
                 }
             }
+        }
+        .sheet(isPresented: $showSettings) {
+            SettingsView()
         }
         .sheet(isPresented: $showLibrary) {
             AdhkarLibraryView()
