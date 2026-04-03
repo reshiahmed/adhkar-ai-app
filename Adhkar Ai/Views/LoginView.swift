@@ -38,7 +38,11 @@ struct LoginView: View {
                 VStack(spacing: 24) {
                     
                     // Logo
-                    AppLogoView(size: 70)
+                    Image("WelcomeLogo")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 80, height: 80)
+                        .cornerRadius(18)
                         .padding(.top, 8)
 
                     // Title & Description
@@ -200,7 +204,7 @@ struct LoginView: View {
     
     private var subtitleText: String {
         switch mode {
-        case .login: return "Sign in to sync your adhkar and track your progress."
+        case .login: return "Please sign in to your account."
         case .signup: return "Join thousands of others mastering their adhkar daily."
         case .forgotPassword: return "Enter your email and we'll send you a reset link."
         }

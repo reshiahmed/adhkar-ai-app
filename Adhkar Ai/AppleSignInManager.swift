@@ -89,8 +89,18 @@ class AppleSignInManager: NSObject, ASAuthorizationControllerDelegate, ASAuthori
     
     func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
         let scenes = UIApplication.shared.connectedScenes
-        let windowScene = scenes.first { $0.activationState == .foregroundActive } as? UIWindowScene
-        let window = windowScene?.windows.first { $0.isKeyWindow }
+        let windowScene = (scenes.first { $0.activationState == .foregroundActive } as? UIWindowScene) ?? 
+                          (scenes.first { $0.activationState == .foregroundInactive } as? UIWindowScene) ??
+                          (scenes.first as? UIWindowScene)
+        
+        let window = windowScene?.windows.first { $0.isKeyWindow } ?? windowScene?.windows.first
+        
+        if let scene = windowScene {
+            return window ?? UIWindow(windowScene: scene)
+        }
+        
+        // Final fallback: should be avoidable in modern scene-based apps.
+        // If we reach here, we'll try to find any scene again or use a placeholder.
         return window ?? UIWindow()
     }
     

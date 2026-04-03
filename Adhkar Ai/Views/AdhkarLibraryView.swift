@@ -151,6 +151,83 @@ struct AddDhikrEditor: View {
     @State private var repetitions = 1
     
     @FocusState private var focusedField: Field?
+    
+    enum Field: Hashable {
+        case arabic, translation
+    }
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                Color.appBackground.ignoresSafeArea()
+                
+                ScrollView {
+                    VStack(spacing: 24) {
+                        // Page Header
+                        VStack(spacing: 8) {
+                            Text("Add Custom Adhkar")
+                                .font(.system(size: 24, weight: .bold, design: .rounded))
+                            Text("Save your personal du'as and dhikr")
+                                .font(.system(size: 14))
+                                .foregroundColor(.textSecondary)
+                        }
+                        .padding(.top, 24)
+                        .padding(.bottom, 8)
+
+                        // Form Card
+                        VStack(spacing: 20) {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Arabic Text")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundColor(.textPrimary)
+                                
+                                TextEditor(text: $arabic)
+                                    .focused($focusedField, equals: .arabic)
+                                    .frame(minHeight: 120)
+                                    .padding(12)
+                                    .background(Color.appBackground.opacity(0.5))
+                                    .cornerRadius(AppRadius.sm)
+                                    .environment(\.layoutDirection, .rightToLeft)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: AppRadius.sm)
+                                            .stroke(focusedField == .arabic ? Color.primaryGreen : Color.clear, lineWidth: 1)
+                                    )
+                            }
+                            
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Translation (Optional)")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundColor(.textPrimary)
+                                
+                                TextEditor(text: $translation)
+                                    .focused($focusedField, equals: .translation)
+                                    .frame(minHeight: 80)
+                                    .padding(12)
+                                    .background(Color.appBackground.opacity(0.5))
+                                    .cornerRadius(AppRadius.sm)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: AppRadius.sm)
+                                            .stroke(focusedField == .translation ? Color.primaryGreen : Color.clear, lineWidth: 1)
+                                    )
+                            }
+                            
+                            VStack(alignment: .leading, spacing: 10) {
+                                HStack {
+                                    Text("Repetitions")
+                                        .font(.system(size: 14, weight: .semibold))
+                                        .foregroundColor(.textPrimary)
+                                    Spacer()
+                                    Text("\(repetitions)×")
+                                        .font(.system(size: 17, weight: .bold, design: .rounded))
+                                        .foregroundColor(.primaryGreen)
+                                }
+                                
+                                Stepper("", value: $repetitions, in: 1...1000)
+                                    .labelsHidden()
+                                    .frame(maxWidth: .infinity, alignment: .trailing)
+                            }
+                        }
+                        .padding(20)
                         .background(Color.cardBackground)
                         .cornerRadius(AppRadius.lg)
                         .cardShadow()

@@ -1,19 +1,3 @@
-// Models.swift — Data models for Adhkar AI
-
-import Foundation
-import SwiftUI
-
-// MARK: - App Theme Mode
-enum ThemeMode: String, CaseIterable {
-    case light  = "light"
-    case auto   = "auto"
-    case dark   = "dark"
-
-    var icon: String {
-        switch self {
-        case .light: return "sun.min"
-// Models.swift — Data models for Adhkar AI
-
 import Foundation
 import SwiftUI
 
@@ -118,7 +102,7 @@ enum AdhkarCategory: String, Codable, CaseIterable, Identifiable {
 }
 
 // MARK: - Daily Category Group
-struct DailyCategory: Identifiable {
+struct DailyCategory: Identifiable, Codable {
     var id: UUID = UUID()
     var category: AdhkarCategory
     var adhkar: [Dhikr]
@@ -155,7 +139,7 @@ enum SegmentType {
 }
 
 // MARK: - User
-struct User {
+struct User: Codable {
     var name: String
     var email: String
     var avatarInitials: String {

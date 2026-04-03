@@ -60,17 +60,17 @@ struct ProfileView: View {
                                         RoundedRectangle(cornerRadius: 14)
                                             .stroke(Color.cardBackground, lineWidth: 3)
                                     )
-                                Text(appState.currentUser.avatarInitials)
+                                Text(appState.currentUser?.avatarInitials ?? "G")
                                     .font(.system(size: 24, weight: .bold))
                                     .foregroundColor(.white)
                             }
                             .offset(y: -32)
 
                             VStack(alignment: .leading, spacing: 3) {
-                                Text(appState.currentUser.name)
+                                Text(appState.currentUser?.name ?? "Guest User")
                                     .font(.system(size: 18, weight: .bold))
                                     .foregroundColor(.textPrimary)
-                                Text(appState.currentUser.email)
+                                Text(appState.currentUser?.email ?? "Sign in for sync")
                                     .font(.system(size: 14))
                                     .foregroundColor(.textSecondary)
                             }

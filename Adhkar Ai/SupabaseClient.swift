@@ -1,6 +1,7 @@
 // SupabaseClient.swift — REST-based Supabase API client for Auth and Data Sync
 
 import Foundation
+import Combine
 
 class SupabaseClient {
     static let shared = SupabaseClient()

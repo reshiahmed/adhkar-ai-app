@@ -1,6 +1,7 @@
 // Adhkar_AiApp.swift — App entry point with AppState injection
 
 import SwiftUI
+import Combine
 
 @main
 struct Adhkar_AiApp: App {

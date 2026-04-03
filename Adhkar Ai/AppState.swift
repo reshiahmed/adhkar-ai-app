@@ -11,6 +11,7 @@ class AppState: ObservableObject {
         static let themeMode = "adhkar.themeMode"
         static let masteryMetadata = "adhkar.masteryMetadata"
         static let dailyCategories = "adhkar.dailyCategories"
+        static let dailyAdhkarStore = "adhkar.dailyStore"
         static let customAdhkar = "adhkar.custom"
         static let arabicFontSize = "adhkar.arabicFontSize"
         static let arabicFontName = "adhkar.arabicFontName"
@@ -49,7 +50,7 @@ class AppState: ObservableObject {
     @Published var themeMode: ThemeMode = .auto {
         didSet {
             defaults.set(themeMode.rawValue, forKey: StorageKey.themeMode)
-            objectWillChange.send() // Ensure full UI refresh on theme change
+            objectWillChange.send()
         }
     }
 
@@ -100,10 +101,10 @@ class AppState: ObservableObject {
     @Published var morningAdhkar: [Dhikr] = AdhkarData.morning
     @Published var eveningAdhkar: [Dhikr] = AdhkarData.evening
     @Published var dailyCategories: [DailyCategory] = []
+    @Published var dailyAdhkarStore: [String: [Dhikr]] = [:]
     
     @Published var customAdhkar: [Dhikr] = [] {
         didSet {
-            // Sync customAdhkar into dailyCategories [.custom] entry
             if let index = dailyCategories.firstIndex(where: { $0.category == .custom }) {
                 dailyCategories[index].adhkar = customAdhkar
             }
@@ -118,8 +119,8 @@ class AppState: ObservableObject {
             if cat == .custom {
                 return DailyCategory(category: .custom, adhkar: customAdhkar)
             } else {
-                // Check if already in persisted state, otherwise use default
-                return DailyCategory(category: cat, adhkar: AdhkarData.adhkar(for: cat))
+                let adhkar = dailyAdhkarStore[cat.rawValue] ?? AdhkarData.adhkar(for: cat)
+                return DailyCategory(category: cat, adhkar: adhkar)
             }
         }
     }
@@ -133,8 +134,6 @@ class AppState: ObservableObject {
     @Published var masteryMetadata: [String: MasteryMetadata] = [:]
 
     // MARK: - Logic & Helpers
-    // (Existing percentage and streak vars go here...)
-    
     var morningCompleted: Int { morningAdhkar.filter(\.isCompleted).count }
     var morningTotal: Int { morningAdhkar.filter(\.isVisible).count }
     var morningAllDone: Bool { morningCompleted >= morningTotal && morningTotal > 0 }
@@ -142,6 +141,8 @@ class AppState: ObservableObject {
     var eveningCompleted: Int { eveningAdhkar.filter(\.isCompleted).count }
     var eveningTotal: Int { eveningAdhkar.filter(\.isVisible).count }
     var eveningAllDone: Bool { eveningCompleted >= eveningTotal && eveningTotal > 0 }
+
+    var totalDailyCount: Int { morningCompleted + eveningCompleted }
 
     // MARK: - Custom Adhkar Management
     func addCustomAdhkar(arabic: String, translation: String, repetitions: Int, benefit: String? = nil, pinTo: String? = nil) {
@@ -169,24 +170,23 @@ class AppState: ObservableObject {
     }
 
     // MARK: - Persistence & Sync
-    private func persistState() {
+    func persistState() {
         store(morningAdhkar, key: StorageKey.morningAdhkar)
         store(eveningAdhkar, key: StorageKey.eveningAdhkar)
         store(dailyCategories, key: StorageKey.dailyCategories)
+        store(dailyAdhkarStore, key: StorageKey.dailyAdhkarStore)
         store(customAdhkar, key: StorageKey.customAdhkar)
         store(masteryMetadata, key: StorageKey.masteryMetadata)
         upsertTodayProgress()
         trimProgressHistory(maxEntries: 180)
         store(progressHistory, key: StorageKey.progressHistory)
-        defaults.set(hasCompletedOnboarding, forKey: StorageKey.hasCompletedOnboarding)
-        defaults.set(hasCompletedTour, forKey: StorageKey.hasCompletedTour)
         
         Task {
             await syncToCloud()
         }
     }
 
-    private func loadPersistedState() {
+    func loadPersistedState() {
         if let storedMorning: [Dhikr] = load(forKey: StorageKey.morningAdhkar) {
             morningAdhkar = storedMorning
         }
@@ -195,6 +195,9 @@ class AppState: ObservableObject {
         }
         if let storedDaily: [DailyCategory] = load(forKey: StorageKey.dailyCategories) {
             dailyCategories = storedDaily
+        }
+        if let storedDailyStore: [String: [Dhikr]] = load(forKey: StorageKey.dailyAdhkarStore) {
+            dailyAdhkarStore = storedDailyStore
         }
         if let storedCustom: [Dhikr] = load(forKey: StorageKey.customAdhkar) {
             customAdhkar = storedCustom
@@ -231,19 +234,18 @@ class AppState: ObservableObject {
         hasCompletedOnboarding = defaults.bool(forKey: StorageKey.hasCompletedOnboarding)
         hasCompletedTour = defaults.bool(forKey: StorageKey.hasCompletedTour)
         
-        setupCategories() // Re-sync categories list
+        setupCategories()
     }
 
+    // MARK: - Progress Helpers
     var totalDaysActive: Int {
         progressHistory.filter { $0.completionRatio > 0 }.count
     }
     
     var longestStreak: Int {
-        // Placeholder for now, could be calculated or synced
         streakDays 
     }
 
-    // Percentage helpers for Progress page
     var morningProgressPct: Int {
         let total = morningAdhkar.filter(\.isVisible).count
         guard total > 0 else { return 0 }
@@ -303,6 +305,7 @@ class AppState: ObservableObject {
         let eveningRatio = eveningTotal > 0 ? Double(eveningCompleted) / Double(eveningTotal) : 0
         return (morningRatio + eveningRatio) / 2
     }
+
     var recentProgress14Days: [DailyProgressEntry] {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
@@ -326,9 +329,11 @@ class AppState: ObservableObject {
         }
         return points
     }
+
     var completedDaysTotal: Int {
         progressHistory.filter { $0.completionRatio > 0 }.count
     }
+
     var streakDays: Int {
         let calendar = Calendar.current
         let sorted = progressHistory.sorted { $0.date > $1.date }
@@ -349,13 +354,11 @@ class AppState: ObservableObject {
                 streak += 1
                 dayCursor = calendar.date(byAdding: .day, value: -1, to: dayCursor) ?? dayCursor
             } else if calendar.isDateInToday(entryDate) {
-                // If it's today and not done yet, don't break the streak yet, but don't count it as a "completed" day in the loop
                 continue
             } else {
                 break
             }
         }
-
         return streak
     }
     
@@ -367,16 +370,11 @@ class AppState: ObservableObject {
         return (false, false, 0)
     }
 
-    // MARK: - Edit Mode (toggled via pencil button)
-    @Published var isMorningEditMode: Bool = false
-    @Published var isEveningEditMode: Bool = false
-
     init() {
         loadPersistedState()
-        persistState()
     }
 
-    // MARK: - Reset (daily reset at midnight)
+    // MARK: - Adhkar Actions
     func resetMorning() {
         for i in morningAdhkar.indices { morningAdhkar[i].reset() }
         persistState()
@@ -387,7 +385,6 @@ class AppState: ObservableObject {
         persistState()
     }
 
-    // MARK: - Increment dhikr
     func incrementMorning(id: String) {
         if let i = morningAdhkar.firstIndex(where: { $0.id == id }) {
             morningAdhkar[i].increment()
@@ -422,7 +419,6 @@ class AppState: ObservableObject {
         }
     }
 
-    // MARK: - Toggle visibility
     func toggleMorningVisibility(id: String) {
         if let i = morningAdhkar.firstIndex(where: { $0.id == id }) {
             morningAdhkar[i].isVisible.toggle()
@@ -469,8 +465,8 @@ class AppState: ObservableObject {
         let today = Calendar.current.startOfDay(for: Date())
         var daysToAdd = 1
 
-        if confidence == 2 { // Yes
-            meta.confidenceScore += 1 // Using as streak
+        if confidence == 2 {
+            meta.confidenceScore += 1
             if meta.status == .new {
                 meta.status = .learning
                 daysToAdd = 2
@@ -481,12 +477,12 @@ class AppState: ObservableObject {
                 } else {
                     daysToAdd = 3
                 }
-            } else { // memorized
+            } else {
                 daysToAdd = 10
             }
-        } else if confidence == 1 { // Almost
+        } else if confidence == 1 {
             daysToAdd = 1
-        } else { // No
+        } else {
             meta.confidenceScore = 0
             if meta.status == .memorized {
                 meta.status = .learning
@@ -500,41 +496,6 @@ class AppState: ObservableObject {
         persistState()
     }
 
-    // MARK: - Arabic Text Segmentation
-    func segmentArabicText(_ text: String) -> [DhikrSegment] {
-        // More robust segmentation using common Arabic punctuation for natural breaks
-        // Characters: ، (comma), ؛ (semicolon), . (period), ؟ (question), ۝ (Ayah end)
-        let punctuationPattern = "[،؛.؟۝]"
-        var segments: [DhikrSegment] = []
-        
-        // Use a scanner or manual split to keep delimiters or split by them
-        // For simplicity, we'll split by spaces but look for punctuation-ended words
-        let rawWords = text.components(separatedBy: .whitespacesAndNewlines).filter { !$0.isEmpty }
-        
-        var currentChunk: [String] = []
-        var segmentId = 0
-        
-        for word in rawWords {
-            currentChunk.append(word)
-            
-            // Check if word ends with punctuation or chunk is large enough (3-4 words)
-            let hasPunctuation = word.range(of: punctuationPattern, options: .regularExpression) != nil
-            
-            if hasPunctuation || currentChunk.count >= 4 {
-                segments.append(DhikrSegment(id: segmentId, content: currentChunk.joined(separator: " ")))
-                currentChunk = []
-                segmentId += 1
-            }
-        }
-        
-        if !currentChunk.isEmpty {
-            segments.append(DhikrSegment(id: segmentId, content: currentChunk.joined(separator: " ")))
-        }
-        
-        return segments
-    }
-
-    // MARK: - Haptic
     private func checkHaptic(completed: Bool) {
         if completed {
             let generator = UINotificationFeedbackGenerator()
@@ -549,7 +510,7 @@ class AppState: ObservableObject {
     func loginOffline() {
         isOfflineMode = true
         isLoggedIn = true
-        currentUser = User(name: "Offline Explorer", email: "offline@adhkar.ai", isOffline: true)
+        currentUser = User(name: "Guest", email: "offline@adhkar.ai", isOffline: true)
     }
 
     func loginReal(email: String, pass: String) async throws {
@@ -559,7 +520,7 @@ class AppState: ObservableObject {
             self.isLoggedIn = true
             self.isOfflineMode = false
         }
-        try await pullInitialData()
+        await syncFromCloud()
     }
 
     func signupReal(email: String, pass: String) async throws {
@@ -569,7 +530,6 @@ class AppState: ObservableObject {
             self.isLoggedIn = true
             self.isOfflineMode = false
         }
-        // New user starts fresh or with default
         persistState()
     }
 
@@ -584,7 +544,6 @@ class AppState: ObservableObject {
             self.isLoggedIn = true
             self.isOfflineMode = false
         }
-        // Sync existing cloud data for this Apple user
         await syncFromCloud()
     }
 
@@ -595,58 +554,8 @@ class AppState: ObservableObject {
         currentUser = nil
     }
 
-    func pullInitialData() async throws {
-        guard let user = SupabaseClient.shared.currentUser else { return }
-        
-        let cloudProgress = try await SupabaseClient.shared.fetchUserProgress()
-        let cloudStats = try await SupabaseClient.shared.fetchUserStats()
-        
-        await MainActor.run {
-            // Apply Cloud Progress
-            for row in cloudProgress {
-                if let id = UUID(uuidString: row.adhkar_id) {
-                    var meta = self.masteryMetadata[id] ?? MasteryMetadata(id: id)
-                    meta.status = MasteryStatus(rawValue: row.level) ?? .new
-                let id = row.adhkar_id
-                var meta = self.masteryMetadata[id] ?? MasteryMetadata(id: id)
-                meta.status = MasteryStatus(rawValue: row.level) ?? .new
-                meta.confidenceScore = row.streak
-                
-                let f = DateFormatter()
-                f.dateFormat = "yyyy-MM-dd"
-                meta.nextReview = f.date(from: row.next_review) ?? Date()
-                meta.lastReview = f.date(from: row.last_updated) ?? Date()
-                
-                self.masteryMetadata[id] = meta
-            }
-            
-            // Apply Cloud Stats (Activity History)
-            if let stats = cloudStats {
-                if let data = stats.activity_history.data(using: .utf8),
-                   let history: [String: DailyProgressEntryProxy] = try? JSONDecoder().decode([String: DailyProgressEntryProxy].self, from: data) {
-                    
-                    let f = DateFormatter()
-                    f.dateFormat = "yyyy-MM-dd"
-                    
-                    self.progressHistory = history.compactMap { (key, proxy) -> DailyProgressEntry? in
-                        guard let date = f.date(from: key) else { return nil }
-                        return DailyProgressEntry(
-                            date: date,
-                            morningCompleted: proxy.m,
-                            eveningCompleted: proxy.e,
-                            completionRatio: proxy.r ?? 0
-                        )
-                    }.sorted { $0.date < $1.date }
-                }
-            }
-            
-            self.loadPersistedState() // Merge with local if needed, but cloud is priority here
-            self.persistState()
-        }
-    }
-
     func syncFromCloud() async {
-        guard let user = SupabaseClient.shared.currentUser, !isOfflineMode else { return }
+        guard SupabaseClient.shared.currentUser != nil, !isOfflineMode else { return }
         
         await MainActor.run { 
             isSyncing = true
@@ -654,7 +563,6 @@ class AppState: ObservableObject {
         }
         
         do {
-            // 1. Fetch Mastery
             let rawProgress = try await SupabaseClient.shared.fetchUserProgress()
             let f = DateFormatter()
             f.dateFormat = "yyyy-MM-dd"
@@ -664,12 +572,11 @@ class AppState: ObservableObject {
                     let st = MasteryStatus(rawValue: raw.level) ?? .new
                     let last = f.date(from: raw.last_updated) ?? Date()
                     let next = f.date(from: raw.next_review) ?? Date()
-                    let meta = MasteryMetadata(id: raw.adhkar_id, status: st, lastReview: last, nextReview: next, confidenceScore: raw.streak)
+                    let meta = MasteryMetadata(id: raw.adhkar_id, status: st, nextReview: next, lastReview: last, confidenceScore: Int(raw.streak))
                     self.masteryMetadata[raw.adhkar_id] = meta
                 }
             }
             
-            // 2. Fetch Stats & History
             if let stats = try await SupabaseClient.shared.fetchUserStats() {
                 await MainActor.run {
                     if let data = stats.activity_history.data(using: .utf8),
@@ -682,7 +589,6 @@ class AppState: ObservableObject {
                 }
             }
 
-            // 3. Fetch Custom Adhkar (Library)
             let remoteCustom = try await SupabaseClient.shared.fetchCustomAdhkar()
             let customAsDhikr = remoteCustom.map { raw in
                 Dhikr(
@@ -690,7 +596,7 @@ class AppState: ObservableObject {
                     arabic: raw.arabic,
                     transliteration: raw.transliteration ?? "",
                     translation: raw.translation ?? "",
-                    repetitions: 1, // Default to 1 from remote if not stored separately
+                    repetitions: 1,
                     source: raw.source,
                     category: .custom,
                     benefit: raw.benefit,
@@ -699,12 +605,10 @@ class AppState: ObservableObject {
             }
             
             await MainActor.run {
-                // Merge logic: prefer cloud contents for existing IDs
                 self.customAdhkar = customAsDhikr
-                self.loadPersistedState() // Merge with local if needed
-                self.persistState()
                 isSyncing = false
                 syncStatus = "Saved"
+                persistState()
             }
         } catch {
             print("⚠️ Sync From Cloud failed: \(error)")
@@ -713,7 +617,7 @@ class AppState: ObservableObject {
     }
 
     func syncToCloud() async {
-        guard let user = SupabaseClient.shared.currentUser, !isOfflineMode else { return }
+        guard let userProfile = SupabaseClient.shared.currentUser, !isOfflineMode else { return }
         
         await MainActor.run { 
             isSyncing = true
@@ -721,7 +625,6 @@ class AppState: ObservableObject {
         }
         
         do {
-            // 1. Sync Stats
             let f = DateFormatter()
             f.dateFormat = "yyyy-MM-dd"
             let historyProxy = Dictionary(uniqueKeysWithValues: progressHistory.map {
@@ -729,7 +632,7 @@ class AppState: ObservableObject {
             })
             
             let stats = RawUserStats(
-                user_id: user.id,
+                user_id: userProfile.id,
                 daily_count: totalDailyCount,
                 daily_streak: streakDays,
                 last_active_date: f.string(from: Date()),
@@ -739,10 +642,9 @@ class AppState: ObservableObject {
             )
             try await SupabaseClient.shared.upsertUserStats(stats)
             
-            // 2. Sync Mastery (Progress)
             let progressRows = masteryMetadata.map { (id, meta) in
                 RawUserProgress(
-                    user_id: user.id,
+                    user_id: userProfile.id,
                     adhkar_id: id,
                     count: 0,
                     level: meta.status.rawValue,
@@ -755,11 +657,10 @@ class AppState: ObservableObject {
                 try await SupabaseClient.shared.upsertUserProgress(progressRows)
             }
 
-            // 3. Sync Custom Adhkar
             let customRows = customAdhkar.map { d in
                 RawCustomAdhkar(
                     id: d.id,
-                    user_id: user.id,
+                    user_id: userProfile.id,
                     arabic: d.arabic,
                     transliteration: d.transliteration,
                     translation: d.translation,
@@ -784,102 +685,11 @@ class AppState: ObservableObject {
             }
         }
     }
-        
-        do {
-            let f = DateFormatter()
-            f.dateFormat = "yyyy-MM-dd"
-            
-            // 1. Prepare Mastery Progress
-            let progressRows = masteryMetadata.map { (id, meta) in
-                RawUserProgress(
-                    user_id: user.id,
-                    adhkar_id: id,
-                    count: 0,
-                    level: meta.status.rawValue,
-                    last_updated: f.string(from: meta.lastReview),
-                    next_review: f.string(from: meta.nextReview),
-                    streak: meta.confidenceScore
-                )
-            }
-            
-            // 2. Prepare Stats & Activity History
-            var historyMap: [String: DailyProgressEntryProxy] = [:]
-            for entry in progressHistory {
-                let key = f.string(from: entry.date)
-                historyMap[key] = DailyProgressEntryProxy(m: entry.morningCompleted, e: entry.eveningCompleted, r: entry.completionRatio)
-            }
-            
-            let historyJSON = String(data: (try? JSONEncoder().encode(historyMap)) ?? Data(), encoding: .utf8) ?? "{}"
-            
-            let stats = RawUserStats(
-                user_id: user.id,
-                daily_count: morningCompleted + eveningCompleted,
-                daily_streak: streakDays,
-                last_active_date: f.string(from: Date()),
-                activity_history: historyJSON,
-                total_days_active: totalDaysActive,
-                longest_streak: longestStreak
-            )
-            
-            // Push to Supabase
-            try await SupabaseClient.shared.upsertUserProgress(progressRows)
-            try await SupabaseClient.shared.upsertUserStats(stats)
-            
-            await MainActor.run { 
-                isSyncing = false
-                syncStatus = "Saved" 
-            }
-        } catch {
-            print("⚠️ Sync failed: \(error)")
-            await MainActor.run { 
-                isSyncing = false
-                syncStatus = "Error"
-            }
-        }
-    }
 
-    // Proxy for JSON history
     struct DailyProgressEntryProxy: Codable {
         let m: Bool
         let e: Bool
         let r: Double?
-    }
-
-    private func persistState() {
-        store(morningAdhkar, key: StorageKey.morningAdhkar)
-        store(eveningAdhkar, key: StorageKey.eveningAdhkar)
-        store(dailyAdhkarStore, key: StorageKey.dailyAdhkarStore)
-        store(masteryMetadata, key: StorageKey.masteryMetadata)
-        upsertTodayProgress()
-        trimProgressHistory(maxEntries: 180)
-        store(progressHistory, key: StorageKey.progressHistory)
-        
-        // Trigger Cloud Sync
-        Task {
-            await syncToCloud()
-        }
-    }
-
-    private func loadPersistedState() {
-        if let storedMorning: [Dhikr] = load(forKey: StorageKey.morningAdhkar) {
-            morningAdhkar = storedMorning
-        }
-        if let storedEvening: [Dhikr] = load(forKey: StorageKey.eveningAdhkar) {
-            eveningAdhkar = storedEvening
-        }
-        if let storedDaily: [String: [Dhikr]] = load(forKey: StorageKey.dailyAdhkarStore) {
-            dailyAdhkarStore = storedDaily
-        }
-        if let storedProgress: [DailyProgressEntry] = load(forKey: StorageKey.progressHistory) {
-            progressHistory = storedProgress
-        }
-        if let storedMastery: [String: MasteryMetadata] = load(forKey: StorageKey.masteryMetadata) {
-            masteryMetadata = storedMastery
-        }
-        if let savedTheme = defaults.string(forKey: StorageKey.themeMode),
-           let parsedTheme = ThemeMode(rawValue: savedTheme) {
-            themeMode = parsedTheme
-        }
     }
 
     private func upsertTodayProgress() {
@@ -913,5 +723,13 @@ class AppState: ObservableObject {
     private func load<T: Codable>(forKey key: String) -> T? {
         guard let data = defaults.data(forKey: key) else { return nil }
         return try? decoder.decode(T.self, from: data)
+    }
+
+    // MARK: - Utilities
+    func segmentArabicText(_ text: String) -> [DhikrSegment] {
+        let words = text.components(separatedBy: .whitespacesAndNewlines).filter { !$0.isEmpty }
+        return words.enumerated().map { (index, word) in
+            DhikrSegment(id: index, content: word)
+        }
     }
 }

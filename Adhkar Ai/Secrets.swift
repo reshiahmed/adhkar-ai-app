@@ -1,6 +1,7 @@
 // Secrets.swift — Supabase credentials (retrieved from PWA)
 
 import Foundation
+import Combine
 
 struct SupabaseConfig {
     static let url = "https://vejzxoxmrvvvboxtqomy.supabase.co"

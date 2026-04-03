@@ -22,7 +22,7 @@ struct AppHeaderView: View {
                     Circle()
                         .fill(Color.primaryGreen)
                         .frame(width: 36, height: 36)
-                    Text(appState.currentUser.avatarInitials)
+                    Text(appState.currentUser?.avatarInitials ?? "G")
                         .font(.system(size: 13, weight: .bold))
                         .foregroundColor(.white)
                 }
