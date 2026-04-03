@@ -4,33 +4,62 @@ import SwiftUI
 
 struct DailyView: View {
     @EnvironmentObject var appState: AppState
-    @State private var selectedCategory: AdhkarCategory? = nil
+    @State private var searchText: String = ""
 
     let columns = [GridItem(.flexible()), GridItem(.flexible())]
 
-    var body: some View {
-        ZStack(alignment: .top) {
-            Color.appBackground.ignoresSafeArea()
+    private var filteredCategories: [DailyCategory] {
+        if searchText.isEmpty { return appState.dailyCategories }
+        let query = searchText.lowercased()
+        return appState.dailyCategories.filter { group in
+            // Search in group title
+            if group.category.displayName.lowercased().contains(query) { return true }
+            // Search inside du'as
+            return group.adhkar.contains { dhikr in
+                dhikr.arabic.contains(query) ||
+                dhikr.transliteration.lowercased().contains(query) ||
+                dhikr.translation.lowercased().contains(query)
+            }
+        }
+    }
 
-            if let selected = selectedCategory {
-                // Detail view for a category
-                DailyCategoryDetailView(category: selected) {
-                    withAnimation { selectedCategory = nil }
-                }
-            } else {
-                ScrollView {
+    var body: some View {
+        NavigationStack {
+            ZStack(alignment: .top) {
+                Color.appBackground.ignoresSafeArea()
+
+                ScrollView(showsIndicators: false) {
                     VStack(spacing: 0) {
-                        Color.clear.frame(height: 64)
+                        // Header spacer (for fixed glass header + status bar)
+                        Color.clear.frame(height: 110)
 
                         // Page header
                         VStack(alignment: .leading, spacing: 4) {
-                            HStack(spacing: 0) {
-                                Text("Daily")
-                                    .font(.system(size: 28, weight: .bold, design: .rounded))
-                                    .foregroundColor(.primaryGreen)
-                                Text(" Adhkar")
-                                    .font(.system(size: 28, weight: .bold, design: .rounded))
-                                    .foregroundColor(.textPrimary)
+                            HStack {
+                                HStack(spacing: 0) {
+                                    Text("Daily")
+                                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                                        .foregroundColor(.primaryGreen)
+                                    Text(" Adhkar")
+                                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                                        .foregroundColor(.textPrimary)
+                                }
+                                Spacer()
+                                
+                                // Grid Edit (reordering categories)
+                                Button {
+                                    withAnimation(.spring()) {
+                                        appState.isDailyGridEditMode.toggle()
+                                    }
+                                } label: {
+                                    Image(systemName: appState.isDailyGridEditMode ? "checkmark.circle.fill" : "slider.horizontal.3")
+                                        .font(.system(size: 14, weight: .medium))
+                                        .foregroundColor(appState.isDailyGridEditMode ? .white : .textPrimary)
+                                        .frame(width: 36, height: 36)
+                                        .background(appState.isDailyGridEditMode ? Color.primaryGreen : Color.cardBackground)
+                                        .cornerRadius(10)
+                                        .cardShadow()
+                                }
                             }
                             Text("Situational du'as for everyday life")
                                 .font(.system(size: 14))
@@ -41,22 +70,81 @@ struct DailyView: View {
                         .padding(.top, 20)
                         .padding(.bottom, 20)
 
-                        // Category grid
-                        LazyVGrid(columns: columns, spacing: 14) {
-                            ForEach(AdhkarData.dailyCategories, id: \.self) { category in
-                                DailyCategoryCard(
-                                    category: category,
-                                    count: AdhkarData.adhkar(for: category).count
-                                ) {
-                                    withAnimation(.easeInOut) { selectedCategory = category }
+                        // Search Bar
+                        HStack(spacing: 10) {
+                            Image(systemName: "magnifyingglass")
+                                .foregroundColor(.textSecondary)
+                                .font(.system(size: 15))
+                            TextField("Search situational categories...", text: $searchText)
+                                .font(.system(size: 15))
+                                .foregroundColor(.textPrimary)
+                            if !searchText.isEmpty {
+                                Button { searchText = "" } label: {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .foregroundColor(.textSecondary)
                                 }
                             }
                         }
+                        .padding(.horizontal, 14)
+                        .frame(height: 46)
+                        .background(Color.cardBackground)
+                        .cornerRadius(AppRadius.md)
+                        .cardShadow()
                         .padding(.horizontal, 16)
-                        .padding(.bottom, 24)
+                        .padding(.bottom, 20)
+
+                        if appState.isDailyGridEditMode {
+                            // Reorder Categories List
+                            VStack(spacing: 12) {
+                                ForEach(appState.dailyCategories) { group in
+                                    HStack {
+                                        Text(group.category.emoji)
+                                            .font(.system(size: 24))
+                                        Text(group.category.displayName)
+                                            .font(.system(size: 15, weight: .medium))
+                                            .foregroundColor(.textPrimary)
+                                        Spacer()
+                                        Image(systemName: "line.3.horizontal")
+                                            .foregroundColor(.textSecondary)
+                                    }
+                                    .padding()
+                                    .background(Color.cardBackground)
+                                    .cornerRadius(12)
+                                    .cardShadow()
+                                }
+                                .onMove { from, to in
+                                    appState.moveDailyCategory(from: from, to: to)
+                                }
+                            }
+                            .padding(.horizontal, 16)
+                            
+                            // Bottom spacer for floating nav pill
+                            Color.clear.frame(height: 120)
+                        } else {
+                            // Category grid
+                            LazyVGrid(columns: columns, spacing: 14) {
+                                ForEach(filteredCategories) { group in
+                                    NavigationLink(value: group.category) {
+                                        DailyCategoryCard(
+                                            category: group.category,
+                                            count: group.adhkar.count
+                                        )
+                                    }
+                                    .buttonStyle(PlainButtonStyle())
+                                }
+                            }
+                            .padding(.horizontal, 16)
+                            
+                            // Bottom spacer for floating nav pill
+                            Color.clear.frame(height: 120)
+                        }
                     }
                 }
             }
+            .navigationDestination(for: AdhkarCategory.self) { category in
+                DailyCategoryDetailView(category: category)
+            }
+            .navigationBarHidden(true) 
         }
     }
 }
@@ -65,108 +153,121 @@ struct DailyView: View {
 struct DailyCategoryCard: View {
     let category: AdhkarCategory
     let count: Int
-    let onTap: () -> Void
 
     var body: some View {
-        Button(action: onTap) {
-            VStack(alignment: .leading, spacing: 10) {
-                // Emoji
-                Text(category.emoji)
-                    .font(.system(size: 32))
+        VStack(alignment: .leading, spacing: 10) {
+            // Emoji
+            Text(category.emoji)
+                .font(.system(size: 32))
 
-                Spacer()
+            Spacer()
 
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(category.displayName)
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.textPrimary)
-                        .multilineTextAlignment(.leading)
-                        .lineLimit(2)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(category.displayName)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.textPrimary)
+                    .multilineTextAlignment(.leading)
+                    .lineLimit(2)
 
-                    Text("\(count) du\u{02BC}a\(count == 1 ? "" : "s")")
-                        .font(.system(size: 12))
-                        .foregroundColor(.textSecondary)
-                }
+                Text("\(count) du\u{02BC}a\(count == 1 ? "" : "s")")
+                    .font(.system(size: 12))
+                    .foregroundColor(.textSecondary)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(16)
-            .frame(height: 130)
-            .background(Color.cardBackground)
-            .cornerRadius(AppRadius.md)
-            .cardShadow()
         }
-        .buttonStyle(PlainButtonStyle())
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(16)
+        .frame(height: 130)
+        .background(Color.cardBackground)
+        .cornerRadius(AppRadius.md)
+        .cardShadow()
     }
 }
 
 // MARK: - Category Detail
 struct DailyCategoryDetailView: View {
+    @EnvironmentObject var appState: AppState
     let category: AdhkarCategory
-    let onBack: () -> Void
-
-    private var adhkar: [Dhikr] { AdhkarData.adhkar(for: category) }
+    
+    private var adhkar: [Dhikr] {
+        appState.dailyCategories.first(where: { $0.category == category })?.adhkar ?? []
+    }
+    
+    private var isListEmpty: Bool { adhkar.isEmpty }
 
     var body: some View {
-        VStack(spacing: 0) {
-            Color.clear.frame(height: 64)
+        ZStack {
+            Color.appBackground.ignoresSafeArea()
+            
+            VStack(spacing: 0) {
+                // Header space
+                Color.clear.frame(height: 10)
 
-            ScrollView {
-                VStack(spacing: 0) {
-                    // Back + title
-                    HStack(spacing: 12) {
-                        Button(action: onBack) {
-                            Image(systemName: "chevron.left")
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundColor(.textPrimary)
-                                .frame(width: 36, height: 36)
-                                .background(Color.cardBackground)
-                                .cornerRadius(10)
-                                .cardShadow()
-                        }
-
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text(category.emoji + " " + category.displayName)
-                                .font(.system(size: 20, weight: .bold, design: .rounded))
-                                .foregroundColor(.textPrimary)
-                            Text("\(adhkar.count) du\u{02BC}a\(adhkar.count == 1 ? "" : "s")")
-                                .font(.system(size: 13))
-                                .foregroundColor(.textSecondary)
-                        }
-
-                        Spacer()
+                if isListEmpty {
+                    VStack(spacing: 12) {
+                        Text("🕌")
+                            .font(.system(size: 48))
+                        Text("Coming soon")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(.textSecondary)
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.top, 16)
-                    .padding(.bottom, 16)
-
-                    if adhkar.isEmpty {
-                        VStack(spacing: 12) {
-                            Text("🕌")
-                                .font(.system(size: 48))
-                            Text("Coming soon")
-                                .font(.system(size: 16, weight: .medium))
-                                .foregroundColor(.textSecondary)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.top, 60)
-                    } else {
-                        LazyVStack(spacing: 12) {
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 60)
+                    Spacer()
+                } else {
+                    List {
+                        Section {
                             ForEach(adhkar) { dhikr in
-                                DhikrCardView(
-                                    dhikr: dhikr,
-                                    isEditMode: false,
-                                    onIncrement: {},
-                                    onToggleVisibility: {}
-                                )
+                                if dhikr.isVisible || appState.isDailyEditMode {
+                                    DhikrCardView(
+                                        dhikr: dhikr,
+                                        isEditMode: appState.isDailyEditMode,
+                                        showCounter: false,
+                                        onIncrement: {},
+                                        onToggleVisibility: {
+                                            withAnimation(.spring()) {
+                                                appState.toggleDailyVisibility(category: category, id: dhikr.id)
+                                            }
+                                        },
+                                        onReset: {}
+                                    )
+                                    .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+                                    .listRowBackground(Color.clear)
+                                    .listRowSeparator(.hidden)
+                                }
+                            }
+                            .onMove { from, to in
+                                appState.moveDailyAdhkar(category: category, from: from, to: to)
                             }
                         }
-                        .padding(.horizontal, 16)
-                        .padding(.bottom, 24)
+                        
+                        // Bottom spacer
+                        Color.clear.frame(height: 100)
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
                     }
+                    .listStyle(.plain)
+                    .environment(\.editMode, .constant(appState.isDailyEditMode ? .active : .inactive))
                 }
             }
         }
-        .transition(.move(edge: .trailing))
+        .navigationTitle(category.emoji + " " + category.displayName)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    withAnimation(.spring()) {
+                        appState.isDailyEditMode.toggle()
+                    }
+                } label: {
+                    Image(systemName: appState.isDailyEditMode ? "checkmark.circle.fill" : "pencil.circle")
+                        .font(.system(size: 20))
+                        .foregroundColor(.primaryGreen)
+                }
+            }
+        }
+        .onDisappear {
+            appState.isDailyEditMode = false
+        }
     }
 }
 

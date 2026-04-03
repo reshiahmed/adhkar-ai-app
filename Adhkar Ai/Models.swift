@@ -1,5 +1,3 @@
-// Models.swift — Data models for Adhkar AI
-
 import Foundation
 import SwiftUI
 
@@ -20,8 +18,8 @@ enum ThemeMode: String, CaseIterable {
 
 // MARK: - Dhikr Model
 struct Dhikr: Identifiable, Codable {
-    var id: UUID = UUID()
-    var arabic: String
+    var id: String
+    let arabic: String
     var transliteration: String
     var translation: String
     var repetitions: Int          // How many times to recite (e.g., 3, 7, 33)
@@ -29,6 +27,8 @@ struct Dhikr: Identifiable, Codable {
     var isVisible: Bool = true    // Visibility toggle (like the PWA edit mode)
     var source: String?           // e.g. "Bukhari", "Muslim"
     var category: AdhkarCategory
+    var benefit: String?          // Added from PWA
+    var pinTo: String?            // Added for Library pinning
 
     var isCompleted: Bool { currentCount >= repetitions }
     var progress: Double { Double(currentCount) / Double(repetitions) }
@@ -102,7 +102,7 @@ enum AdhkarCategory: String, Codable, CaseIterable, Identifiable {
 }
 
 // MARK: - Daily Category Group
-struct DailyCategory: Identifiable {
+struct DailyCategory: Identifiable, Codable {
     var id: UUID = UUID()
     var category: AdhkarCategory
     var adhkar: [Dhikr]
@@ -111,20 +111,35 @@ struct DailyCategory: Identifiable {
     var completedCount: Int { adhkar.filter(\.isCompleted).count }
 }
 
-// MARK: - Mastery Progress
-struct MasteryProgress: Identifiable {
-    var id: UUID = UUID()
-    var dhikr: Dhikr
-    var memorizationLevel: Int     // 0–5 (spaced repetition level)
-    var nextReviewDate: Date?
-    var isDueToday: Bool {
-        guard let next = nextReviewDate else { return true }
-        return next <= Date()
-    }
+// MARK: - Mastery Progress & SRS
+enum MasteryStatus: String, Codable {
+    case new      = "new"
+    case learning = "learning"
+    case memorized = "memorized"
+}
+
+struct MasteryMetadata: Codable, Identifiable {
+    let id: String
+    var status: MasteryStatus = .new
+    var interval: Int = 0        // interval in days
+    var nextReview: Date = Date()
+    var lastReview: Date?
+    var confidenceScore: Int = 0  // 0-2 (No, Almost, Yes)
+}
+
+struct DhikrSegment: Identifiable {
+    var id: Int
+    var content: String
+    var type: SegmentType = .text
+}
+
+enum SegmentType {
+    case text
+    case bismillah
 }
 
 // MARK: - User
-struct User {
+struct User: Codable {
     var name: String
     var email: String
     var avatarInitials: String {
@@ -135,8 +150,8 @@ struct User {
 }
 
 // MARK: - Daily Progress Entry (for My Progress chart)
-struct DailyProgressEntry: Identifiable {
-    var id: UUID = UUID()
+struct DailyProgressEntry: Identifiable, Codable {
+    var id: Date { date }
     var date: Date
     var morningCompleted: Bool
     var eveningCompleted: Bool

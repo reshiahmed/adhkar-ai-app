@@ -3,13 +3,25 @@
 import SwiftUI
 
 struct DhikrCardView: View {
+    @EnvironmentObject var appState: AppState
     let dhikr: Dhikr
     let isEditMode: Bool
+    let showCounter: Bool
     let onIncrement: () -> Void
     let onToggleVisibility: () -> Void
-
+    let onReset: () -> Void
+    
     @State private var isExpanded: Bool = true
     @State private var showCompletionBurst = false
+
+    init(dhikr: Dhikr, isEditMode: Bool, showCounter: Bool = true, onIncrement: @escaping () -> Void, onToggleVisibility: @escaping () -> Void, onReset: @escaping () -> Void) {
+        self.dhikr = dhikr
+        self.isEditMode = isEditMode
+        self.showCounter = showCounter
+        self.onIncrement = onIncrement
+        self.onToggleVisibility = onToggleVisibility
+        self.onReset = onReset
+    }
 
     private var counterLabel: String {
         "\(dhikr.currentCount)/\(dhikr.repetitions)x"
@@ -17,61 +29,65 @@ struct DhikrCardView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Arabic text + counter button
-            HStack(alignment: .top, spacing: 12) {
-
-                // Counter badge top-right in PWA is floating — here we do right side
-                VStack {
-                    // Counter indicator label
-                    Text(counterLabel)
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(dhikr.isCompleted ? .white : .primaryGreen)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(dhikr.isCompleted ? Color.primaryGreen : Color.lightGreen)
-                        .cornerRadius(AppRadius.full)
-                }
-
-                Spacer()
-
-                // (+) circular counter button
-                Button {
-                    onIncrement()
-                    if dhikr.currentCount + 1 >= dhikr.repetitions {
-                        triggerCompletionBurst()
+            // Arabic text + counter button (Only if counting is enabled)
+            if showCounter {
+                HStack(alignment: .top, spacing: 12) {
+                    VStack {
+                        // Counter indicator label
+                        Text(counterLabel)
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(dhikr.isCompleted ? .white : .primaryGreen)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(dhikr.isCompleted ? Color.primaryGreen : Color.lightGreen)
+                            .cornerRadius(AppRadius.full)
                     }
-                } label: {
-                    ZStack {
-                        Circle()
-                            .fill(dhikr.isCompleted ? Color.primaryGreen : Color.white)
-                            .frame(width: 40, height: 40)
-                            .overlay(
-                                Circle()
-                                    .stroke(Color.primaryGreen, lineWidth: 2)
-                            )
 
-                        if dhikr.isCompleted {
-                            Image(systemName: "checkmark")
-                                .font(.system(size: 16, weight: .bold))
-                                .foregroundColor(.white)
-                        } else {
-                            Image(systemName: "plus")
-                                .font(.system(size: 18, weight: .medium))
-                                .foregroundColor(.primaryGreen)
+                    Spacer()
+
+                    // (+) circular counter button
+                    Button {
+                        onIncrement()
+                        if dhikr.currentCount + 1 >= dhikr.repetitions {
+                            triggerCompletionBurst()
+                        }
+                    } label: {
+                        ZStack {
+                            Circle()
+                                .fill(dhikr.isCompleted ? Color.primaryGreen : Color.white)
+                                .frame(width: 40, height: 40)
+                                .overlay(
+                                    Circle()
+                                        .stroke(Color.primaryGreen, lineWidth: 2)
+                                )
+
+                            if dhikr.isCompleted {
+                                Image(systemName: "checkmark")
+                                    .font(.system(size: 16, weight: .bold))
+                                    .foregroundColor(.white)
+                            } else {
+                                Image(systemName: "plus")
+                                    .font(.system(size: 18, weight: .medium))
+                                    .foregroundColor(.primaryGreen)
+                            }
                         }
                     }
+                    .scaleEffect(showCompletionBurst ? 1.2 : 1.0)
+                    .animation(.spring(response: 0.3, dampingFraction: 0.5), value: showCompletionBurst)
+                    .disabled(dhikr.isCompleted)
                 }
-                .scaleEffect(showCompletionBurst ? 1.2 : 1.0)
-                .animation(.spring(response: 0.3, dampingFraction: 0.5), value: showCompletionBurst)
-                .disabled(dhikr.isCompleted)
+                .padding(.horizontal, 16)
+                .padding(.top, 16)
+            } else {
+                // Non-counter mode padding adjustment
+                Color.clear.frame(height: 12)
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 16)
 
             // Arabic text (RTL)
             if !isEditMode {
                 Text(dhikr.arabic)
-                    .font(.system(size: AppFont.arabicLarge))
+                    .font(.custom(appState.arabicFontName == "System" ? "" : appState.arabicFontName, size: appState.arabicFontSize))
+                    .lineSpacing(appState.arabicLineSpacing)
                     .multilineTextAlignment(.trailing)
                     .environment(\.layoutDirection, .rightToLeft)
                     .foregroundColor(.textPrimary)
@@ -79,22 +95,26 @@ struct DhikrCardView: View {
                     .padding(.horizontal, 16)
                     .padding(.top, 12)
 
-                // Transliteration
+                // Transliteration & Translation with global visibility support
                 if isExpanded {
-                    Text(dhikr.transliteration)
-                        .font(.system(size: 14, weight: .regular, design: .rounded))
-                        .italic()
-                        .foregroundColor(.secondaryGreen)
-                        .padding(.horizontal, 16)
-                        .padding(.top, 10)
+                    if appState.showTransliteration && !dhikr.transliteration.isEmpty {
+                        Text(dhikr.transliteration)
+                            .font(.system(size: 14, weight: .regular, design: .rounded))
+                            .italic()
+                            .foregroundColor(.secondaryGreen)
+                            .padding(.horizontal, 16)
+                            .padding(.top, 12)
+                    }
 
-                    // Translation
-                    Text(dhikr.translation)
-                        .font(.system(size: 14))
-                        .foregroundColor(.textSecondary)
-                        .lineSpacing(3)
-                        .padding(.horizontal, 16)
-                        .padding(.top, 6)
+                    if appState.showTranslation && !dhikr.translation.isEmpty {
+                        Text(dhikr.translation)
+                            .font(.system(size: 14))
+                            .foregroundColor(.textSecondary)
+                            .lineSpacing(4)
+                            .padding(.horizontal, 16)
+                            .padding(.top, 8)
+                            .padding(.bottom, 4)
+                    }
                 }
             }
 
@@ -160,6 +180,16 @@ struct DhikrCardView: View {
         .cornerRadius(AppRadius.md)
         .cardShadow()
         .opacity(dhikr.isVisible ? 1.0 : 0.45)
+        .onTapGesture {
+            if showCounter && !dhikr.isCompleted && !isEditMode {
+                onIncrement()
+            }
+        }
+        .onLongPressGesture(minimumDuration: 0.8) {
+            if showCounter && !isEditMode {
+                onReset()
+            }
+        }
     }
 
     private func triggerCompletionBurst() {
@@ -175,7 +205,8 @@ struct DhikrCardView: View {
         dhikr: AdhkarData.morning[0],
         isEditMode: false,
         onIncrement: {},
-        onToggleVisibility: {}
+        onToggleVisibility: {},
+        onReset: {}
     )
     .padding()
     .background(Color.appBackground)

@@ -1,7 +1,6 @@
-// Adhkar_AiApp.swift — App entry: AppState injection, badge clearing, scene lifecycle
-
 import SwiftUI
 import UserNotifications
+import Combine
 
 @main
 struct Adhkar_AiApp: App {

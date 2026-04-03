@@ -1,21 +1,23 @@
-// ProfileView.swift — User profile, settings, library, progress (v2)
+// ProfileView.swift — User profile, settings, library, progress
 
 import SwiftUI
 
 struct ProfileView: View {
     @EnvironmentObject var appState: AppState
-    @State private var showLibrary      = false
-    @State private var showProgress     = false
-    @State private var showSettings     = false
+    @Environment(\.colorScheme) var colorScheme
+    @State private var showLibrary = false
+    @State private var showProgress = false
+    @State private var showSettings = false
     @State private var showLogoutConfirm = false
 
     var body: some View {
         ZStack(alignment: .top) {
             Color.appBackground.ignoresSafeArea()
 
-            ScrollView {
+            ScrollView(showsIndicators: false) {
                 VStack(spacing: 0) {
-                    Color.clear.frame(height: 64)
+                    // Header spacer (for fixed glass header + status bar)
+                    Color.clear.frame(height: 110)
 
                     // Offline banner
                     if appState.isOfflineMode {
@@ -42,11 +44,13 @@ struct ProfileView: View {
 
                     // Profile card
                     VStack(spacing: 0) {
+                        // Green banner
                         Rectangle()
                             .fill(Color.primaryGreen)
                             .frame(height: 70)
                             .cornerRadius(AppRadius.md, corners: [.topLeft, .topRight])
 
+                        // Avatar + name
                         HStack(alignment: .top, spacing: 16) {
                             ZStack {
                                 RoundedRectangle(cornerRadius: 14)
@@ -56,43 +60,27 @@ struct ProfileView: View {
                                         RoundedRectangle(cornerRadius: 14)
                                             .stroke(Color.cardBackground, lineWidth: 3)
                                     )
-                                Text(appState.currentUser.avatarInitials)
+                                Text(appState.currentUser?.avatarInitials ?? "G")
                                     .font(.system(size: 24, weight: .bold))
                                     .foregroundColor(.white)
                             }
                             .offset(y: -32)
 
                             VStack(alignment: .leading, spacing: 3) {
-                                Text(appState.currentUser.name)
+                                Text(appState.currentUser?.name ?? "Guest User")
                                     .font(.system(size: 18, weight: .bold))
                                     .foregroundColor(.textPrimary)
-                                Text(appState.currentUser.email)
+                                Text(appState.currentUser?.email ?? "Sign in for sync")
                                     .font(.system(size: 14))
                                     .foregroundColor(.textSecondary)
                             }
                             .padding(.top, 8)
 
                             Spacer()
-
-                            // Streak pill
-                            HStack(spacing: 4) {
-                                Text("🔥")
-                                    .font(.system(size: 16))
-                                Text("\(appState.streakCount)")
-                                    .font(.system(size: 16, weight: .bold))
-                                    .foregroundColor(Color(hex: "F59E0B"))
-                                Text("day streak")
-                                    .font(.system(size: 12))
-                                    .foregroundColor(.textSecondary)
-                            }
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 6)
-                            .background(Color(hex: "FFF3CD"))
-                            .cornerRadius(AppRadius.full)
-                            .padding(.top, 8)
                         }
                         .padding(.horizontal, 16)
                         .padding(.bottom, 16)
+                        .offset(y: 0)
                     }
                     .background(Color.cardBackground)
                     .cornerRadius(AppRadius.md)
@@ -102,116 +90,118 @@ struct ProfileView: View {
                     .padding(.bottom, 20)
 
                     // App info row
-                    HStack(spacing: 14) {
-                        AppLogoView(size: 42)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Adhkar AI")
-                                .font(.system(size: 15, weight: .semibold))
-                                .foregroundColor(.textPrimary)
-                            Text("Your daily dhikr companion")
-                                .font(.system(size: 12))
-                                .foregroundColor(.textSecondary)
-                        }
-                        Spacer()
-                    }
-                    .padding(14)
-                    .background(Color.cardBackground)
-                    .cornerRadius(AppRadius.md)
-                    .cardShadow()
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 10)
-
-                    // Feature navigation rows
-                    VStack(spacing: 10) {
+                    ProfileRowItem(
+                        iconImage: "AppLogoRow",
+                        title: "Adhkar AI",
+                        subtitle: "Your daily dhikr companion",
+                        useGradientIcon: true
+                    ) {}
+                    // Nav Categories
+                    VStack(spacing: 12) {
                         ProfileNavigationRow(
-                            icon: "books.vertical",
+                            icon: "gearshape.fill",
+                            iconColor: .primaryGreen,
+                            title: "App Settings",
+                            subtitle: "Arabic font size, style & visuals"
+                        ) { showSettings = true }
+
+                        ProfileNavigationRow(
+                            icon: "books.vertical.fill",
                             iconColor: Color(hex: "EC4899"),
                             title: "Adhkar Library",
-                            subtitle: "Create & manage your personal du'as",
-                            badge: appState.customDhikr.isEmpty ? nil : "\(appState.customDhikr.count)"
+                            subtitle: "Sync & manage personal du'as"
                         ) { showLibrary = true }
-
-                        ProfileNavigationRow(
-                            icon: "graduationcap",
-                            iconColor: Color.primaryGreen,
-                            title: "Mastery",
-                            subtitle: "Track your memorization journey"
-                        ) {}
 
                         ProfileNavigationRow(
                             icon: "chart.bar.fill",
                             iconColor: Color(hex: "3B82F6"),
                             title: "My Progress",
-                            subtitle: "View daily completion stats"
+                            subtitle: "View detailed completion history"
                         ) { showProgress = true }
-
-                        ProfileNavigationRow(
-                            icon: "bell.fill",
-                            iconColor: Color(hex: "F59E0B"),
-                            title: "Notifications & Settings",
-                            subtitle: appState.notificationsEnabled ? "Reminders are on" : "Tap to set up reminders"
-                        ) { showSettings = true }
                     }
                     .padding(.horizontal, 16)
-                    .padding(.bottom, 20)
+                    .padding(.bottom, 24)
 
-                    // Dev settings
-                    VStack(spacing: 10) {
-                        HStack(spacing: 14) {
-                            ZStack {
-                                RoundedRectangle(cornerRadius: 10)
-                                    .fill(Color.gray.opacity(0.12))
-                                    .frame(width: 42, height: 42)
-                                Image(systemName: "wifi.slash")
-                                    .font(.system(size: 18))
-                                    .foregroundColor(.textSecondary)
-                            }
-                            VStack(alignment: .leading, spacing: 3) {
-                                Text("Offline Mode")
-                                    .font(.system(size: 15, weight: .semibold))
-                                    .foregroundColor(.textPrimary)
-                                Text("Bypass Supabase auth for local testing")
-                                    .font(.system(size: 12))
-                                    .foregroundColor(.textSecondary)
-                            }
-                            Spacer()
-                            Toggle("", isOn: $appState.isOfflineMode)
-                                .tint(.primaryGreen)
-                                .labelsHidden()
-                        }
-                        .padding(14)
-                        .background(Color.cardBackground)
-                        .cornerRadius(AppRadius.md)
-                        .cardShadow()
-
-                        Text("Adhkar AI · v1.0.0")
-                            .font(.system(size: 12))
+                    // Developer & Account Section
+                    VStack(alignment: .leading, spacing: 14) {
+                        Text("Account & Developer")
+                            .font(.system(size: 14, weight: .bold))
                             .foregroundColor(.textSecondary)
-                    }
-                    .padding(.horizontal, 16)
+                            .padding(.horizontal, 16)
 
-                    Button { showLogoutConfirm = true } label: {
-                        Text("Sign Out")
-                            .font(.system(size: 15, weight: .medium))
-                            .foregroundColor(.red)
-                            .padding(.vertical, 12)
+                        VStack(spacing: 0) {
+                            // Offline Mode
+                            HStack(spacing: 14) {
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .fill(Color.gray.opacity(0.1))
+                                        .frame(width: 42, height: 42)
+                                    Image(systemName: "wifi.slash")
+                                        .font(.system(size: 18))
+                                        .foregroundColor(.textSecondary)
+                                }
+                                Text("Offline Mode (Dev)")
+                                    .font(.system(size: 15, weight: .medium))
+                                    .foregroundColor(.textPrimary)
+                                Spacer()
+                                Toggle("", isOn: $appState.isOfflineMode)
+                                    .tint(.primaryGreen)
+                                    .labelsHidden()
+                            }
+                            .padding(14)
+
+                            Divider().padding(.leading, 64)
+
+                            // Sign Out
+                            Button {
+                                showLogoutConfirm = true
+                            } label: {
+                                HStack(spacing: 14) {
+                                    ZStack {
+                                        RoundedRectangle(cornerRadius: 10)
+                                            .fill(Color.red.opacity(0.1))
+                                            .frame(width: 42, height: 42)
+                                        Image(systemName: "power")
+                                            .font(.system(size: 18, weight: .bold))
+                                            .foregroundColor(.red)
+                                    }
+                                    Text("Sign Out")
+                                        .font(.system(size: 15, weight: .medium))
+                                        .foregroundColor(.red)
+                                    Spacer()
+                                }
+                            }
+                            .padding(14)
+                        }
+                        .background(Color.cardBackground)
+                        .cornerRadius(16)
+                        .cardShadow()
+                        .padding(.horizontal, 16)
                     }
-                    .padding(.top, 16)
-                    .padding(.bottom, 32)
+                    .padding(.bottom, 24)
+
+                    // App Version Footer
+                    VStack(spacing: 6) {
+                        Text("Adhkar AI · v1.1.0")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(.textSecondary)
+                        Text("By Reshi Ahmed")
+                            .font(.system(size: 11))
+                            .foregroundColor(.textSecondary.opacity(0.6))
+                    }
+                    .padding(.top, 8)
+                    .padding(.bottom, 100) // Spacer for floating nav
                 }
             }
         }
+        .sheet(isPresented: $showSettings) {
+            SettingsView()
+        }
         .sheet(isPresented: $showLibrary) {
             AdhkarLibraryView()
-                .environmentObject(appState)
         }
         .sheet(isPresented: $showProgress) {
             MyProgressView()
-                .environmentObject(appState)
-        }
-        .sheet(isPresented: $showSettings) {
-            SettingsView()
-                .environmentObject(appState)
         }
         .confirmationDialog("Sign out?", isPresented: $showLogoutConfirm) {
             Button("Sign Out", role: .destructive) { appState.logout() }
@@ -220,13 +210,48 @@ struct ProfileView: View {
     }
 }
 
-// MARK: - Navigation Row (updated with optional badge)
+// MARK: - Profile Row
+struct ProfileRowItem: View {
+    let iconImage: String
+    let title: String
+    let subtitle: String
+    var useGradientIcon: Bool = false
+    let action: () -> Void
+
+    var body: some View {
+        HStack(spacing: 14) {
+            if useGradientIcon {
+                AppLogoView(size: 42)
+            } else {
+                Image(systemName: iconImage)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 24, height: 24)
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(.textPrimary)
+                Text(subtitle)
+                    .font(.system(size: 12))
+                    .foregroundColor(.textSecondary)
+            }
+            Spacer()
+        }
+        .padding(14)
+        .background(Color.cardBackground)
+        .cornerRadius(AppRadius.md)
+        .cardShadow()
+        .padding(.horizontal, 16)
+        .padding(.bottom, 10)
+    }
+}
+
 struct ProfileNavigationRow: View {
     let icon: String
     let iconColor: Color
     let title: String
     let subtitle: String
-    var badge: String? = nil
     let action: () -> Void
 
     var body: some View {
@@ -249,15 +274,6 @@ struct ProfileNavigationRow: View {
                         .foregroundColor(.textSecondary)
                 }
                 Spacer()
-                if let badge {
-                    Text(badge)
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .background(Color.primaryGreen)
-                        .cornerRadius(AppRadius.full)
-                }
                 Image(systemName: "chevron.right")
                     .font(.system(size: 13, weight: .medium))
                     .foregroundColor(.textSecondary)
@@ -271,7 +287,7 @@ struct ProfileNavigationRow: View {
     }
 }
 
-// MARK: - Corner radius helper (keep here to avoid duplicate)
+// MARK: - Rounded corners helper
 extension View {
     func cornerRadius(_ radius: CGFloat, corners: UIRectCorner) -> some View {
         clipShape(RoundedCorner(radius: radius, corners: corners))
@@ -282,11 +298,8 @@ struct RoundedCorner: Shape {
     var radius: CGFloat = .infinity
     var corners: UIRectCorner = .allCorners
     func path(in rect: CGRect) -> Path {
-        let path = UIBezierPath(
-            roundedRect: rect,
-            byRoundingCorners: corners,
-            cornerRadii: CGSize(width: radius, height: radius)
-        )
+        let path = UIBezierPath(roundedRect: rect, byRoundingCorners: corners,
+                                cornerRadii: CGSize(width: radius, height: radius))
         return Path(path.cgPath)
     }
 }

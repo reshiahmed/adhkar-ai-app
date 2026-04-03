@@ -7,26 +7,35 @@ struct ContentView: View {
 
     var body: some View {
         Group {
-            if appState.isLoggedIn {
+            if !appState.isLoggedIn {
+                LoginView()
+            } else if !appState.hasCompletedOnboarding {
+                OnboardingView()
+                    .transition(.asymmetric(insertion: .push(from: .trailing), removal: .move(edge: .leading)))
+            } else {
                 MainTabView()
                     .preferredColorScheme(appState.colorScheme)
-            } else {
-                LoginView()
+                    .overlay {
+                        if appState.hasCompletedOnboarding && !appState.hasCompletedTour {
+                            AppTourView(selectedTab: $appState.selectedTab)
+                        }
+                    }
             }
         }
-        .animation(.easeInOut(duration: 0.3), value: appState.isLoggedIn)
+        .animation(.easeInOut(duration: 0.4), value: appState.isLoggedIn)
+        .animation(.easeInOut(duration: 0.4), value: appState.hasCompletedOnboarding)
+        .animation(.easeInOut(duration: 0.4), value: appState.hasCompletedTour)
     }
 }
 
 // MARK: - Main Tab View
 struct MainTabView: View {
     @EnvironmentObject var appState: AppState
-    @State private var selectedTab: Int = 0
 
     var body: some View {
         ZStack(alignment: .top) {
             // Page content
-            TabView(selection: $selectedTab) {
+            TabView(selection: $appState.selectedTab) {
                 MorningView()
                     .tag(0)
                 EveningView()
@@ -35,8 +44,10 @@ struct MainTabView: View {
                     .tag(2)
                 MasteryView()
                     .tag(3)
-                ProfileView()
+                MyProgressView()
                     .tag(4)
+                ProfileView()
+                    .tag(5)
             }
             // Hide default tab bar so we can use our custom one
             .tabViewStyle(.page(indexDisplayMode: .never))
@@ -45,64 +56,103 @@ struct MainTabView: View {
             AppHeaderView()
                 .zIndex(10)
 
-            // Custom bottom tab bar
+            // Custom bottom floating navigation pill
             VStack {
                 Spacer()
-                CustomTabBar(selectedTab: $selectedTab)
+                CustomTabBar(selectedTab: $appState.selectedTab)
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 24)
             }
             .zIndex(10)
         }
-        .ignoresSafeArea(edges: .bottom)
     }
 }
 
-// MARK: - Custom Bottom Tab Bar (matching PWA exactly)
+// MARK: - Custom Bottom Tab Bar (Modern Floating Pill)
 struct CustomTabBar: View {
     @Binding var selectedTab: Int
-
-    struct TabItem {
+    @State private var isDragging: Bool = false
+    
+    struct TabItem: Identifiable {
+        let id: Int
         let icon: String
         let label: String
     }
 
     let tabs: [TabItem] = [
-        TabItem(icon: "sun.min",           label: "Morning"),
-        TabItem(icon: "moon",              label: "Evening"),
-        TabItem(icon: "clock",             label: "Daily"),
-        TabItem(icon: "graduationcap",     label: "Mastery"),
-        TabItem(icon: "person",            label: "Profile"),
+        TabItem(id: 0, icon: "sun.min",           label: "Morning"),
+        TabItem(id: 1, icon: "moon",              label: "Evening"),
+        TabItem(id: 2, icon: "clock",             label: "Daily"),
+        TabItem(id: 3, icon: "graduationcap",     label: "Mastery"),
+        TabItem(id: 4, icon: "chart.bar",         label: "Progress"),
+        TabItem(id: 5, icon: "person",            label: "Profile"),
     ]
 
     var body: some View {
-        HStack(spacing: 0) {
-            ForEach(Array(tabs.enumerated()), id: \.offset) { index, tab in
-                Button {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        selectedTab = index
+        GeometryReader { geo in
+            let itemWidth = geo.size.width / CGFloat(tabs.count)
+            
+            ZStack(alignment: .leading) {
+                // Sliding Indicator Pill
+                RoundedRectangle(cornerRadius: 24)
+                    .fill(Color.primaryGreen.opacity(0.15))
+                    .frame(width: itemWidth - 8, height: 54)
+                    .offset(x: CGFloat(selectedTab) * itemWidth + 4, y: 8)
+                    .animation(.spring(response: 0.35, dampingFraction: 0.7), value: selectedTab)
+                
+                HStack(spacing: 0) {
+                    ForEach(tabs) { tab in
+                        let isSelected = selectedTab == tab.id
+                        
+                        Button {
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                                selectedTab = tab.id
+                                UISelectionFeedbackGenerator().selectionChanged()
+                            }
+                        } label: {
+                            VStack(spacing: 4) {
+                                Image(systemName: isSelected ? tab.icon + ".fill" : tab.icon)
+                                    .font(.system(size: 19, weight: isSelected ? .bold : .medium))
+                                    .foregroundColor(isSelected ? .primaryGreen : .textSecondary)
+                                    .frame(height: 26)
+                                
+                                Text(tab.label)
+                                    .font(.system(size: 8, weight: isSelected ? .bold : .medium))
+                                    .foregroundColor(isSelected ? .primaryGreen : .textSecondary)
+                                    .fixedSize(horizontal: true, vertical: false)
+                            }
+                            .frame(width: itemWidth, height: 70)
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                        .contentShape(Rectangle())
                     }
-                } label: {
-                    VStack(spacing: 4) {
-                        Image(systemName: selectedTab == index ? tab.icon + ".fill" : tab.icon)
-                            .font(.system(size: 20, weight: selectedTab == index ? .semibold : .regular))
-                            .foregroundColor(selectedTab == index ? .primaryGreen : .textSecondary)
-                            .animation(.easeInOut(duration: 0.2), value: selectedTab)
-
-                        Text(tab.label)
-                            .font(.system(size: 10, weight: selectedTab == index ? .semibold : .regular))
-                            .foregroundColor(selectedTab == index ? .primaryGreen : .textSecondary)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, 10)
-                    .padding(.bottom, 24) // extra for home indicator
                 }
-                .buttonStyle(PlainButtonStyle())
             }
+            .background(
+                Capsule()
+                    .fill(.ultraThinMaterial)
+                    .shadow(color: .black.opacity(0.12), radius: 15, x: 0, y: 8)
+            )
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { value in
+                        isDragging = true
+                        let index = Int(floor(value.location.x / itemWidth))
+                        let safeIndex = max(0, min(tabs.count - 1, index))
+                        
+                        if selectedTab != safeIndex {
+                            UISelectionFeedbackGenerator().selectionChanged()
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                                selectedTab = safeIndex
+                            }
+                        }
+                    }
+                    .onEnded { _ in
+                        isDragging = false
+                    }
+            )
         }
-        .background(
-            Color.tabBarBackground
-                .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: -2)
-        )
-        .overlay(Divider(), alignment: .top)
+        .frame(height: 70)
     }
 }
 

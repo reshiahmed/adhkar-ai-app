@@ -1,290 +1,302 @@
-// SettingsView.swift — Notification scheduling, theme, and app preferences
-
+// SettingsView.swift — Visual customizations and app preferences
 import SwiftUI
-import UserNotifications
 
 struct SettingsView: View {
-    @EnvironmentObject var appState: AppState
     @Environment(\.dismiss) var dismiss
-
-    @State private var morningHour: Int   = 6
-    @State private var morningMinute: Int = 0
-    @State private var eveningHour: Int   = 18
-    @State private var eveningMinute: Int = 0
-    @State private var showPermissionAlert = false
+    @EnvironmentObject var appState: AppState
+    
+    let arabicFonts = ["System", "Amiri", "Scheherazade", "Lateef"]
 
     var body: some View {
         NavigationStack {
-            ZStack {
+            ZStack(alignment: .top) {
                 Color.appBackground.ignoresSafeArea()
-
-                ScrollView {
-                    VStack(spacing: 20) {
-
-                        // MARK: Notifications Section
-                        SettingsSectionHeader(title: "Notifications", icon: "bell.fill", color: Color(hex: "F59E0B"))
-
-                        VStack(spacing: 1) {
-
-                            // Master toggle
-                            SettingsRow {
-                                HStack {
-                                    VStack(alignment: .leading, spacing: 3) {
-                                        Text("Daily Reminders")
-                                            .font(.system(size: 15, weight: .semibold))
-                                            .foregroundColor(.textPrimary)
-                                        Text("Get reminded for morning & evening adhkar")
-                                            .font(.system(size: 12))
-                                            .foregroundColor(.textSecondary)
-                                    }
-                                    Spacer()
-                                    Toggle("", isOn: Binding(
-                                        get: { appState.notificationsEnabled },
-                                        set: { newVal in
-                                            if newVal {
-                                                appState.requestNotificationPermission()
-                                            } else {
-                                                appState.notificationsEnabled = false
-                                            }
-                                        }
-                                    ))
-                                    .tint(.primaryGreen)
-                                    .labelsHidden()
-                                }
-                            }
-
-                            if appState.notificationsEnabled {
-                                Divider().padding(.horizontal, 16)
-
-                                // Morning time picker
-                                SettingsRow {
-                                    VStack(alignment: .leading, spacing: 10) {
-                                        Label("Morning Reminder  ☀️", systemImage: "sun.min")
-                                            .font(.system(size: 14, weight: .semibold))
-                                            .foregroundColor(.textPrimary)
-
-                                        HStack(spacing: 0) {
-                                            Picker("Hour", selection: $morningHour) {
-                                                ForEach(0..<24, id: \.self) { h in
-                                                    Text(String(format: "%02d", h)).tag(h)
-                                                }
-                                            }
-                                            .pickerStyle(.wheel)
-                                            .frame(width: 80, height: 100)
-                                            .clipped()
-
-                                            Text(":")
-                                                .font(.system(size: 20, weight: .bold))
-                                                .foregroundColor(.textPrimary)
-
-                                            Picker("Minute", selection: $morningMinute) {
-                                                ForEach([0, 15, 30, 45], id: \.self) { m in
-                                                    Text(String(format: "%02d", m)).tag(m)
-                                                }
-                                            }
-                                            .pickerStyle(.wheel)
-                                            .frame(width: 80, height: 100)
-                                            .clipped()
-
-                                            Spacer()
-
-                                            Text(formattedTime(hour: morningHour, minute: morningMinute))
-                                                .font(.system(size: 16, weight: .semibold, design: .rounded))
-                                                .foregroundColor(.primaryGreen)
-                                        }
-                                    }
-                                }
-
-                                Divider().padding(.horizontal, 16)
-
-                                // Evening time picker
-                                SettingsRow {
-                                    VStack(alignment: .leading, spacing: 10) {
-                                        Label("Evening Reminder  🌙", systemImage: "moon")
-                                            .font(.system(size: 14, weight: .semibold))
-                                            .foregroundColor(.textPrimary)
-
-                                        HStack(spacing: 0) {
-                                            Picker("Hour", selection: $eveningHour) {
-                                                ForEach(0..<24, id: \.self) { h in
-                                                    Text(String(format: "%02d", h)).tag(h)
-                                                }
-                                            }
-                                            .pickerStyle(.wheel)
-                                            .frame(width: 80, height: 100)
-                                            .clipped()
-
-                                            Text(":")
-                                                .font(.system(size: 20, weight: .bold))
-                                                .foregroundColor(.textPrimary)
-
-                                            Picker("Minute", selection: $eveningMinute) {
-                                                ForEach([0, 15, 30, 45], id: \.self) { m in
-                                                    Text(String(format: "%02d", m)).tag(m)
-                                                }
-                                            }
-                                            .pickerStyle(.wheel)
-                                            .frame(width: 80, height: 100)
-                                            .clipped()
-
-                                            Spacer()
-
-                                            Text(formattedTime(hour: eveningHour, minute: eveningMinute))
-                                                .font(.system(size: 16, weight: .semibold, design: .rounded))
-                                                .foregroundColor(.primaryGreen)
-                                        }
-                                    }
-                                }
-
-                                // Save button
-                                Button {
-                                    saveNotificationTimes()
-                                } label: {
-                                    Text("Save Reminder Times")
-                                        .font(.system(size: 15, weight: .semibold))
-                                        .foregroundColor(.white)
-                                        .frame(maxWidth: .infinity)
-                                        .frame(height: 48)
-                                        .background(Color.primaryGreen)
-                                        .cornerRadius(AppRadius.md)
-                                }
+                
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 24) {
+                        // Header spacer
+                        Color.clear.frame(height: 20)
+                        
+                        // 1. Live Preview Section
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Live Preview")
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundColor(.textSecondary)
                                 .padding(.horizontal, 16)
-                                .padding(.top, 4)
-                            }
+                            
+                            PreviewDhikrCard()
+                                .padding(.horizontal, 16)
                         }
-                        .background(Color.cardBackground)
-                        .cornerRadius(AppRadius.md)
-                        .cardShadow()
-
-                        // MARK: Appearance section
-                        SettingsSectionHeader(title: "Appearance", icon: "paintbrush.fill", color: Color(hex: "8B5CF6"))
-
-                        VStack(spacing: 1) {
-                            SettingsRow {
-                                HStack {
-                                    Text("Theme")
-                                        .font(.system(size: 15, weight: .semibold))
-                                        .foregroundColor(.textPrimary)
-                                    Spacer()
-                                    Picker("", selection: $appState.themeMode) {
-                                        ForEach(ThemeMode.allCases, id: \.self) { mode in
-                                            Label(mode.rawValue.capitalized, systemImage: mode.icon)
-                                                .tag(mode)
-                                        }
-                                    }
-                                    .pickerStyle(.segmented)
-                                    .frame(width: 180)
-                                    .tint(.primaryGreen)
-                                }
+                        
+                        // 2. Reading Experience Section
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("Reading Experience")
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundColor(.textSecondary)
+                                .padding(.horizontal, 16)
+                            
+                            VStack(spacing: 0) {
+                                // Arabic Font Size
+                                SettingsSliderRow(
+                                    icon: "textformat.size",
+                                    iconColor: .primaryGreen,
+                                    label: "Arabic Font Size",
+                                    value: $appState.arabicFontSize,
+                                    range: 20...48
+                                )
+                                
+                                Divider().padding(.leading, 56)
+                                
+                                // Arabic Line Spacing
+                                SettingsSliderRow(
+                                    icon: "line.horizontal.3",
+                                    iconColor: .primaryGreen,
+                                    label: "Line Spacing",
+                                    value: $appState.arabicLineSpacing,
+                                    range: 0...24
+                                )
+                                
+                                Divider().padding(.leading, 56)
+                                
+                                // Arabic Font Style
+                                SettingsPickerRow(
+                                    icon: "text.justify.right",
+                                    iconColor: .primaryGreen,
+                                    label: "Arabic Font",
+                                    selection: $appState.arabicFontName,
+                                    options: arabicFonts
+                                )
                             }
+                            .background(Color.cardBackground)
+                            .cornerRadius(16)
+                            .cardShadow()
+                            .padding(.horizontal, 16)
                         }
-                        .background(Color.cardBackground)
-                        .cornerRadius(AppRadius.md)
-                        .cardShadow()
-
-                        // MARK: About
-                        SettingsSectionHeader(title: "About", icon: "info.circle.fill", color: Color(hex: "3B82F6"))
-
-                        VStack(spacing: 1) {
-                            SettingsRow {
-                                HStack {
-                                    Text("Version")
-                                        .font(.system(size: 15))
-                                        .foregroundColor(.textPrimary)
-                                    Spacer()
-                                    Text("1.0.0")
-                                        .foregroundColor(.textSecondary)
-                                }
+                        
+                        // 3. Content Visibility Section
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("Content Visibility")
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundColor(.textSecondary)
+                                .padding(.horizontal, 16)
+                            
+                            VStack(spacing: 0) {
+                                SettingsToggleRow(
+                                    icon: "a.magnify",
+                                    iconColor: Color(hex: "3B82F6"),
+                                    label: "Show Transliteration",
+                                    isOn: $appState.showTransliteration
+                                )
+                                
+                                Divider().padding(.leading, 56)
+                                
+                                SettingsToggleRow(
+                                    icon: "character.book.closed",
+                                    iconColor: Color(hex: "8B5CF6"),
+                                    label: "Show Translation",
+                                    isOn: $appState.showTranslation
+                                )
                             }
-                            Divider().padding(.horizontal, 16)
-                            SettingsRow {
-                                HStack {
-                                    Text("Total Adhkar")
-                                        .font(.system(size: 15))
-                                        .foregroundColor(.textPrimary)
-                                    Spacer()
-                                    Text("\(AdhkarData.morning.count + AdhkarData.evening.count)")
-                                        .foregroundColor(.primaryGreen)
-                                        .fontWeight(.semibold)
-                                }
-                            }
+                            .background(Color.cardBackground)
+                            .cornerRadius(16)
+                            .cardShadow()
+                            .padding(.horizontal, 16)
                         }
-                        .background(Color.cardBackground)
-                        .cornerRadius(AppRadius.md)
-                        .cardShadow()
-
-                        Spacer(minLength: 32)
+                        
+                        // 4. Appearance Section
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("Appearance")
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundColor(.textSecondary)
+                                .padding(.horizontal, 16)
+                            
+                            ThemeSelectionGroup()
+                                .padding(.horizontal, 16)
+                        }
+                        
+                        // Spacer for bottom pill
+                        Color.clear.frame(height: 100)
                     }
-                    .padding(16)
                 }
             }
-            .navigationTitle("Settings")
+            .navigationTitle("Global Settings")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .topBarTrailing) {
                     Button("Done") { dismiss() }
-                        .foregroundColor(.primaryGreen)
                         .fontWeight(.semibold)
+                        .foregroundColor(.primaryGreen)
                 }
             }
-            .onAppear {
-                morningHour   = appState.morningNotifTime.hour   ?? 6
-                morningMinute = appState.morningNotifTime.minute ?? 0
-                eveningHour   = appState.eveningNotifTime.hour   ?? 18
-                eveningMinute = appState.eveningNotifTime.minute ?? 0
+        }
+    }
+}
+
+// MARK: - Components
+
+struct PreviewDhikrCard: View {
+    @EnvironmentObject var appState: AppState
+    
+    var body: some View {
+        VStack(alignment: .center, spacing: 16) {
+            Text("سُبْحَانَ اللَّهِ وَبِحَمْدِهِ")
+                .font(.custom(appState.arabicFontName == "System" ? "" : appState.arabicFontName, size: appState.arabicFontSize))
+                .multilineTextAlignment(.center)
+                .foregroundColor(.textPrimary)
+                .frame(maxWidth: .infinity)
+                .lineSpacing(10)
+            
+            if appState.showTransliteration {
+                Text("SubhanAllahi wa bihamdihi")
+                    .font(.system(size: 14, weight: .medium, design: .serif))
+                    .italic()
+                    .foregroundColor(.primaryGreen)
+                    .multilineTextAlignment(.center)
+            }
+            
+            if appState.showTranslation {
+                Text("Glory is to Allah and praise is to Him.")
+                    .font(.system(size: 14))
+                    .foregroundColor(.textSecondary)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+            }
+        }
+        .padding(24)
+        .background(Color.cardBackground)
+        .cornerRadius(24)
+        .overlay(
+            RoundedRectangle(cornerRadius: 24)
+                .stroke(Color.primaryGreen.opacity(0.1), lineWidth: 1)
+        )
+        .cardShadow()
+    }
+}
+
+struct SettingsSliderRow: View {
+    let icon: String
+    let iconColor: Color
+    let label: String
+    @Binding var value: Double
+    let range: ClosedRange<Double>
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 14) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(iconColor.opacity(0.1))
+                        .frame(width: 32, height: 32)
+                    Image(systemName: icon)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(iconColor)
+                }
+                Text(label)
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundColor(.textPrimary)
+                Spacer()
+                Text("\(Int(value))pt")
+                    .font(.system(size: 13, weight: .bold, design: .monospaced))
+                    .foregroundColor(.textSecondary)
+            }
+            
+            Slider(value: $value, in: range, step: 1)
+                .tint(.primaryGreen)
+        }
+        .padding(16)
+    }
+}
+
+struct SettingsPickerRow: View {
+    let icon: String
+    let iconColor: Color
+    let label: String
+    @Binding var selection: String
+    let options: [String]
+    
+    var body: some View {
+        HStack(spacing: 14) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(iconColor.opacity(0.1))
+                    .frame(width: 32, height: 32)
+                Image(systemName: icon)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(iconColor)
+            }
+            Text(label)
+                .font(.system(size: 15, weight: .medium))
+                .foregroundColor(.textPrimary)
+            Spacer()
+            Picker("", selection: $selection) {
+                ForEach(options, id: \.self) { opt in
+                    Text(opt).tag(opt)
+                }
+            }
+            .pickerStyle(.menu)
+            .tint(.primaryGreen)
+        }
+        .padding(16)
+    }
+}
+
+struct SettingsToggleRow: View {
+    let icon: String
+    let iconColor: Color
+    let label: String
+    @Binding var isOn: Bool
+    
+    var body: some View {
+        HStack(spacing: 14) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(iconColor.opacity(0.1))
+                    .frame(width: 32, height: 32)
+                Image(systemName: icon)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(iconColor)
+            }
+            Text(label)
+                .font(.system(size: 15, weight: .medium))
+                .foregroundColor(.textPrimary)
+            Spacer()
+            Toggle("", isOn: $isOn)
+                .tint(.primaryGreen)
+                .labelsHidden()
+        }
+        .padding(16)
+    }
+}
+
+struct ThemeSelectionGroup: View {
+    @EnvironmentObject var appState: AppState
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            ForEach(ThemeMode.allCases, id: \.self) { mode in
+                Button {
+                    withAnimation(.spring()) {
+                        appState.themeMode = mode
+                    }
+                } label: {
+                    VStack(spacing: 8) {
+                        Image(systemName: mode.icon)
+                            .font(.system(size: 20))
+                        Text(mode.rawValue.capitalized)
+                            .font(.system(size: 12, weight: .semibold))
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+                    .background(appState.themeMode == mode ? Color.primaryGreen : Color.cardBackground)
+                    .foregroundColor(appState.themeMode == mode ? .white : .textPrimary)
+                    .cornerRadius(12)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(appState.themeMode == mode ? Color.clear : Color.divider.opacity(0.5), lineWidth: 1)
+                    )
+                }
+                .buttonStyle(PlainButtonStyle())
             }
         }
     }
-
-    // MARK: - Helpers
-    private func formattedTime(hour: Int, minute: Int) -> String {
-        let h = hour % 12 == 0 ? 12 : hour % 12
-        let m = String(format: "%02d", minute)
-        let period = hour < 12 ? "AM" : "PM"
-        return "\(h):\(m) \(period)"
-    }
-
-    private func saveNotificationTimes() {
-        var morning = DateComponents(); morning.hour = morningHour; morning.minute = morningMinute
-        var evening = DateComponents(); evening.hour = eveningHour; evening.minute = eveningMinute
-        appState.morningNotifTime = morning
-        appState.eveningNotifTime = evening
-        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-    }
-}
-
-// MARK: - Reusable helpers
-struct SettingsSectionHeader: View {
-    let title: String
-    let icon: String
-    let color: Color
-
-    var body: some View {
-        HStack(spacing: 8) {
-            Image(systemName: icon)
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundColor(color)
-            Text(title.uppercased())
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundColor(.textSecondary)
-                .tracking(1)
-            Spacer()
-        }
-        .padding(.horizontal, 4)
-        .padding(.top, 8)
-    }
-}
-
-struct SettingsRow<Content: View>: View {
-    @ViewBuilder var content: Content
-    var body: some View {
-        content
-            .padding(.horizontal, 16)
-            .padding(.vertical, 14)
-    }
-}
-
-#Preview {
-    SettingsView()
-        .environmentObject(AppState())
 }
