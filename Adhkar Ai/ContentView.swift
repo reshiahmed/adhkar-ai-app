@@ -50,9 +50,8 @@ fileprivate struct MainTabView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             
-            // Custom Floating Nav Pill
             NavPill(selectedTab: $appState.selectedTab)
-                .padding(.bottom, 34) // Adjust for safe area / home indicator
+                .padding(.bottom, 12) // Lowered from 34 for a more grounded feel
         }
         .ignoresSafeArea(.keyboard)
     }
@@ -79,7 +78,7 @@ fileprivate struct NavPill: View {
                     isSelected: selectedTab == tab.index,
                     namespace: pillNamespace
                 ) {
-                    withAnimation(.spring(response: 0.42, dampingFraction: 0.72)) {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
                         selectedTab = tab.index
                     }
                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
@@ -208,7 +207,7 @@ fileprivate struct NavPillTab: View {
                         ))
                         .scaleEffect(isSelected ? 1.08 : 1.0)
                         .animation(
-                            .spring(response: 0.35, dampingFraction: 0.65),
+                            .spring(response: 0.28, dampingFraction: 0.68),
                             value: isSelected
                         )
 
@@ -224,7 +223,7 @@ fileprivate struct NavPillTab: View {
                     }
                 }
                 .foregroundStyle(isSelected ? .white : Color.textSecondary)
-                .animation(.spring(response: 0.35, dampingFraction: 0.70), value: isSelected)
+                .animation(.spring(response: 0.28, dampingFraction: 0.72), value: isSelected)
             }
         }
         .buttonStyle(.plain)

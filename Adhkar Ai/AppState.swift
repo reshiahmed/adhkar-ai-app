@@ -19,6 +19,8 @@ class AppState: ObservableObject {
         static let showTransliteration = "adhkar.showTransliteration"
         static let showTranslation = "adhkar.showTranslation"
         static let arabicLineSpacing = "adhkar.arabicLineSpacing"
+        static let englishFontSize = "adhkar.englishFontSize"
+        static let showSearchBars = "adhkar.showSearchBars"
         static let hasCompletedOnboarding = "adhkar.hasCompletedOnboarding"
         static let hasCompletedTour = "adhkar.hasCompletedTour"
     }
@@ -65,6 +67,20 @@ class AppState: ObservableObject {
     @Published var arabicLineSpacing: Double = 8 {
         didSet {
             defaults.set(arabicLineSpacing, forKey: StorageKey.arabicLineSpacing)
+            objectWillChange.send()
+        }
+    }
+    
+    @Published var englishFontSize: Double = 14 {
+        didSet {
+            defaults.set(englishFontSize, forKey: StorageKey.englishFontSize)
+            objectWillChange.send()
+        }
+    }
+    
+    @Published var showSearchBars: Bool = true {
+        didSet {
+            defaults.set(showSearchBars, forKey: StorageKey.showSearchBars)
             objectWillChange.send()
         }
     }
@@ -230,6 +246,14 @@ class AppState: ObservableObject {
         
         if defaults.object(forKey: StorageKey.showTranslation) != nil {
             showTranslation = defaults.bool(forKey: StorageKey.showTranslation)
+        }
+        
+        if let savedEnglishSize = defaults.object(forKey: StorageKey.englishFontSize) as? Double {
+            englishFontSize = savedEnglishSize
+        }
+        
+        if defaults.object(forKey: StorageKey.showSearchBars) != nil {
+            showSearchBars = defaults.bool(forKey: StorageKey.showSearchBars)
         }
         
         hasCompletedOnboarding = defaults.bool(forKey: StorageKey.hasCompletedOnboarding)

@@ -29,6 +29,7 @@ struct Adhkar_AiApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(appState)
+                .preferredColorScheme(appState.colorScheme)
         }
         .modelContainer(sharedModelContainer)
     }

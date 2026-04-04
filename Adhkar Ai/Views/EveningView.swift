@@ -35,7 +35,9 @@ struct EveningView: View {
                             .transition(.move(edge: .top).combined(with: .opacity))
                     }
 
-                    searchBar
+                    if appState.showSearchBars {
+                        searchBar
+                    }
                     sectionHeader
 
                     if appState.isEveningEditMode {

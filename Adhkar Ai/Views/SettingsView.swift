@@ -54,6 +54,14 @@ struct SettingsView: View {
                                     range: 0...24
                                 )
                                 
+                                SettingsSliderRow(
+                                    icon: "textformat",
+                                    iconColor: .primaryGreen,
+                                    label: "English Font Size",
+                                    value: $appState.englishFontSize,
+                                    range: 12...24
+                                )
+                                
                                 Divider().padding(.leading, 56)
                                 
                                 // Arabic Font Style
@@ -93,6 +101,15 @@ struct SettingsView: View {
                                     iconColor: Color(hex: "8B5CF6"),
                                     label: "Show Translation",
                                     isOn: $appState.showTranslation
+                                )
+                                
+                                Divider().padding(.leading, 56)
+                                
+                                SettingsToggleRow(
+                                    icon: "magnifyingglass.circle",
+                                    iconColor: Color(hex: "F59E0B"),
+                                    label: "Show Search Bars",
+                                    isOn: $appState.showSearchBars
                                 )
                             }
                             .background(Color.cardBackground)
@@ -146,7 +163,7 @@ struct PreviewDhikrCard: View {
             
             if appState.showTransliteration {
                 Text("SubhanAllahi wa bihamdihi")
-                    .font(.system(size: 14, weight: .medium, design: .serif))
+                    .font(.system(size: appState.englishFontSize, weight: .medium, design: .serif))
                     .italic()
                     .foregroundColor(.primaryGreen)
                     .multilineTextAlignment(.center)
@@ -154,7 +171,7 @@ struct PreviewDhikrCard: View {
             
             if appState.showTranslation {
                 Text("Glory is to Allah and praise is to Him.")
-                    .font(.system(size: 14))
+                    .font(.system(size: appState.englishFontSize))
                     .foregroundColor(.textSecondary)
                     .multilineTextAlignment(.center)
                     .lineLimit(2)

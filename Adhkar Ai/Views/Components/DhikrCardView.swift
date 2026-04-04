@@ -28,173 +28,162 @@ struct DhikrCardView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            // Arabic text + counter button (Only if counting is enabled)
-            if showCounter {
-                HStack(alignment: .top, spacing: 12) {
-                    VStack {
-                        // Counter indicator label
-                        Text(counterLabel)
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundColor(dhikr.isCompleted ? .white : .primaryGreen)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .background(dhikr.isCompleted ? Color.primaryGreen : Color.lightGreen)
-                            .cornerRadius(AppRadius.full)
-                    }
-
-                    Spacer()
-
-                    // (+) circular counter button
-                    Button {
-                        onIncrement()
-                        if dhikr.currentCount + 1 >= dhikr.repetitions {
-                            triggerCompletionBurst()
-                        }
-                    } label: {
-                        ZStack {
-                            Circle()
-                                .fill(dhikr.isCompleted ? Color.primaryGreen : Color.white)
-                                .frame(width: 40, height: 40)
-                                .overlay(
-                                    Circle()
-                                        .stroke(Color.primaryGreen, lineWidth: 2)
-                                )
-
-                            if dhikr.isCompleted {
-                                Image(systemName: "checkmark")
-                                    .font(.system(size: 16, weight: .bold))
-                                    .foregroundColor(.white)
-                            } else {
-                                Image(systemName: "plus")
-                                    .font(.system(size: 18, weight: .medium))
-                                    .foregroundColor(.primaryGreen)
-                            }
-                        }
-                    }
-                    .scaleEffect(showCompletionBurst ? 1.2 : 1.0)
-                    .animation(.spring(response: 0.3, dampingFraction: 0.5), value: showCompletionBurst)
-                    .disabled(dhikr.isCompleted)
-                }
+        VStack(alignment: .trailing, spacing: 0) {
+            // 1. Arabic Text (Top)
+            Text(dhikr.arabic)
+                .font(.custom(appState.arabicFontName == "System" ? "" : appState.arabicFontName, size: appState.arabicFontSize))
+                .lineSpacing(appState.arabicLineSpacing)
+                .multilineTextAlignment(.trailing)
+                .environment(\.layoutDirection, .rightToLeft)
+                .foregroundColor(.textPrimary)
+                .frame(maxWidth: .infinity, alignment: .trailing)
+                .fixedSize(horizontal: false, vertical: true) // Fix truncation
                 .padding(.horizontal, 16)
-                .padding(.top, 16)
-            } else {
-                // Non-counter mode padding adjustment
-                Color.clear.frame(height: 12)
-            }
+                .padding(.top, 20)
+                .padding(.bottom, 12)
 
-            // Arabic text (RTL)
-            if !isEditMode {
-                Text(dhikr.arabic)
-                    .font(.custom(appState.arabicFontName == "System" ? "" : appState.arabicFontName, size: appState.arabicFontSize))
-                    .lineSpacing(appState.arabicLineSpacing)
-                    .multilineTextAlignment(.trailing)
-                    .environment(\.layoutDirection, .rightToLeft)
-                    .foregroundColor(.textPrimary)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-                    .padding(.horizontal, 16)
-                    .padding(.top, 12)
-
-                // Transliteration & Translation with global visibility support
-                if isExpanded {
+            // 2. English Content (Center)
+            if isExpanded {
+                VStack(alignment: .leading, spacing: 10) {
                     if appState.showTransliteration && !dhikr.transliteration.isEmpty {
                         Text(dhikr.transliteration)
-                            .font(.system(size: 14, weight: .regular, design: .rounded))
+                            .font(.system(size: appState.englishFontSize, weight: .regular, design: .rounded))
                             .italic()
                             .foregroundColor(.secondaryGreen)
-                            .padding(.horizontal, 16)
-                            .padding(.top, 12)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
 
                     if appState.showTranslation && !dhikr.translation.isEmpty {
                         Text(dhikr.translation)
-                            .font(.system(size: 14))
+                            .font(.system(size: appState.englishFontSize))
                             .foregroundColor(.textSecondary)
                             .lineSpacing(4)
-                            .padding(.horizontal, 16)
-                            .padding(.top, 8)
-                            .padding(.bottom, 4)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 16)
+                .padding(.bottom, 16)
             }
 
-            // Source tag
-            if let source = dhikr.source, !source.isEmpty {
-                HStack {
-                    Spacer()
+            // 3. Interactive Bottom Row
+            HStack(alignment: .center, spacing: 12) {
+                // Counter Label (e.g. 1/3x)
+                if showCounter {
+                    Text(counterLabel)
+                        .font(.system(size: 13, weight: .bold, design: .rounded))
+                        .foregroundColor(dhikr.isCompleted ? .white : .primaryGreen)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(dhikr.isCompleted ? Color.primaryGreen : Color.lightGreen)
+                        .cornerRadius(10)
+                }
+
+                Spacer()
+
+                // Source Tag
+                if let source = dhikr.source, !source.isEmpty {
                     Text(source)
                         .font(.system(size: 11, weight: .medium))
                         .foregroundColor(.textSecondary)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 3)
-                        .background(Color.appBackground)
+                        .background(Color.appBackground.opacity(0.5))
                         .cornerRadius(AppRadius.full)
                 }
-                .padding(.horizontal, 16)
-                .padding(.top, 8)
+
+                // Action Button (Increment or Visibility Toggle)
+                Button {
+                    if isEditMode {
+                        onToggleVisibility()
+                    } else {
+                        onIncrement()
+                        if dhikr.currentCount + 1 >= dhikr.repetitions {
+                            triggerCompletionBurst()
+                        }
+                    }
+                } label: {
+                    ZStack {
+                        Circle()
+                            .fill(actionButtonColor)
+                            .frame(width: 44, height: 44)
+                            .cardShadow()
+
+                        Image(systemName: actionButtonIcon)
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundColor(actionButtonContentColor)
+                    }
+                }
+                .scaleEffect(showCompletionBurst ? 1.15 : 1.0)
+                .animation(.spring(response: 0.3, dampingFraction: 0.5), value: showCompletionBurst)
+                .disabled(!isEditMode && dhikr.isCompleted)
             }
-
-            // Expand/collapse toggle
-            Button {
-                withAnimation(.easeInOut(duration: 0.25)) {
-                    isExpanded.toggle()
+            .padding(.horizontal, 16)
+            .padding(.bottom, 16)
+            
+            // Manual Expand Indicator (Subtle)
+            if !isEditMode && (appState.showTransliteration || appState.showTranslation) {
+                Button {
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
+                        isExpanded.toggle()
+                    }
+                } label: {
+                    Image(systemName: "chevron.up")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundColor(.textSecondary.opacity(0.5))
+                        .rotationEffect(.degrees(isExpanded ? 0 : 180))
+                        .padding(.bottom, 8)
+                        .frame(maxWidth: .infinity)
                 }
-            } label: {
-                HStack {
-                    Spacer()
-                    Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundColor(.textSecondary)
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 10)
-            }
-
-            // Edit mode controls
-            if isEditMode {
-                Divider()
-                    .padding(.horizontal, 16)
-
-                HStack {
-                    Label(
-                        dhikr.isVisible ? "Visible" : "Hidden",
-                        systemImage: dhikr.isVisible ? "eye" : "eye.slash"
-                    )
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(dhikr.isVisible ? .primaryGreen : .textSecondary)
-
-                    Spacer()
-
-                    Toggle("", isOn: Binding(
-                        get: { dhikr.isVisible },
-                        set: { _ in onToggleVisibility() }
-                    ))
-                    .tint(.primaryGreen)
-                    .labelsHidden()
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
             }
         }
         .background(Color.cardBackground)
-        .cornerRadius(AppRadius.md)
+        .cornerRadius(24)
         .cardShadow()
-        .opacity(dhikr.isVisible ? 1.0 : 0.45)
+        .opacity(dhikr.isVisible ? 1.0 : 0.5)
         .onTapGesture {
             if showCounter && !dhikr.isCompleted && !isEditMode {
                 onIncrement()
             }
         }
-        .onLongPressGesture(minimumDuration: 0.8) {
+        .onLongPressGesture(minimumDuration: 0.6) {
             if showCounter && !isEditMode {
                 onReset()
             }
         }
     }
 
+    // MARK: - Helpers
+    
+    private var actionButtonIcon: String {
+        if isEditMode {
+            return dhikr.isVisible ? "eye.fill" : "eye.slash.fill"
+        } else if dhikr.isCompleted {
+            return "checkmark"
+        } else {
+            return "plus"
+        }
+    }
+
+    private var actionButtonColor: Color {
+        if isEditMode {
+            return dhikr.isVisible ? .primaryGreen : Color.textSecondary.opacity(0.15)
+        } else {
+            return dhikr.isCompleted ? .primaryGreen : .lightGreen
+        }
+    }
+
+    private var actionButtonContentColor: Color {
+        if isEditMode {
+            return .white
+        } else {
+            return dhikr.isCompleted ? .white : .primaryGreen
+        }
+    }
+
     private func triggerCompletionBurst() {
         showCompletionBurst = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
             showCompletionBurst = false
         }
     }
