@@ -14,8 +14,6 @@ struct SettingsView: View {
                 
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 24) {
-                        // Header spacer
-                        Color.clear.frame(height: 20)
                         
                         // 1. Live Preview Section
                         VStack(alignment: .leading, spacing: 12) {

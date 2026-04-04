@@ -1,32 +1,35 @@
+//
+//  Adhkar_AiApp.swift
+//  Adhkar Ai
+//
+//  Created by Ahmed Reshi on 4.04.2026.
+//
+
 import SwiftUI
-import UserNotifications
-import Combine
+import SwiftData
 
 @main
 struct Adhkar_AiApp: App {
     @StateObject private var appState = AppState()
-    @Environment(\.scenePhase) private var scenePhase
+    
+    var sharedModelContainer: ModelContainer = {
+        let schema = Schema([
+            Item.self,
+        ])
+        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+
+        do {
+            return try ModelContainer(for: schema, configurations: [modelConfiguration])
+        } catch {
+            fatalError("Could not create ModelContainer: \(error)")
+        }
+    }()
 
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .environmentObject(appState)
-                .preferredColorScheme(appState.colorScheme)
-                .onAppear {
-                    appState.clearBadge()
-                    appState.checkAutoReset()
-                }
         }
-        .onChange(of: scenePhase) { _, phase in
-            switch phase {
-            case .active:
-                appState.clearBadge()
-                appState.checkAutoReset()
-            case .background:
-                appState.rescheduleNotifications()
-            default:
-                break
-            }
-        }
+        .modelContainer(sharedModelContainer)
     }
 }

@@ -19,8 +19,6 @@ struct MyProgressView: View {
 
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 24) {
-                        // Header spacer (for fixed glass header + status bar)
-                        Color.clear.frame(height: 110)
 
                         // 1. Custom Header (Growth Analytics)
                         VStack(alignment: .leading, spacing: 4) {

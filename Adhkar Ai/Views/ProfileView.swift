@@ -111,13 +111,6 @@ struct ProfileView: View {
                             title: "Adhkar Library",
                             subtitle: "Sync & manage personal du'as"
                         ) { showLibrary = true }
-
-                        ProfileNavigationRow(
-                            icon: "chart.bar.fill",
-                            iconColor: Color(hex: "3B82F6"),
-                            title: "My Progress",
-                            subtitle: "View detailed completion history"
-                        ) { showProgress = true }
                     }
                     .padding(.horizontal, 16)
                     .padding(.bottom, 24)
@@ -190,7 +183,7 @@ struct ProfileView: View {
                             .foregroundColor(.textSecondary.opacity(0.6))
                     }
                     .padding(.top, 8)
-                    .padding(.bottom, 100) // Spacer for floating nav
+                    .padding(.bottom, 120) // Spacer for floating nav
                 }
             }
         }

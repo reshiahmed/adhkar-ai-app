@@ -3,6 +3,7 @@
 import SwiftUI
 import Combine
 
+@MainActor
 class AppState: ObservableObject {
     private enum StorageKey {
         static let morningAdhkar = "adhkar.morning"

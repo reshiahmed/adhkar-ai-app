@@ -6,19 +6,84 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXContainerItemProxy section */
+		576232D82F813EF900E54D38 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 41CAD9262F76DA9E00A8CFA7 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 576232C82F813EF800E54D38;
+			remoteInfo = "Adhkar Ai";
+		};
+		576232E22F813EF900E54D38 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 41CAD9262F76DA9E00A8CFA7 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 576232C82F813EF800E54D38;
+			remoteInfo = "Adhkar Ai";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		576232C92F813EF800E54D38 /* Adhkar Ai.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Adhkar Ai.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		576232D72F813EF900E54D38 /* Adhkar AiTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Adhkar AiTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		576232E12F813EF900E54D38 /* Adhkar AiUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Adhkar AiUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		41CAD9302F76DA9E00A8CFA7 /* Adhkar Ai */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = "Adhkar Ai";
 			sourceTree = "<group>";
 		};
+		576232CA2F813EF800E54D38 /* Adhkar Ai */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Adhkar Ai";
+			sourceTree = "<group>";
+		};
+		576232DA2F813EF900E54D38 /* Adhkar AiTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Adhkar AiTests";
+			sourceTree = "<group>";
+		};
+		576232E42F813EF900E54D38 /* Adhkar AiUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Adhkar AiUITests";
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		576232C62F813EF800E54D38 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		576232D42F813EF900E54D38 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		576232DE2F813EF900E54D38 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		41CAD9252F76DA9E00A8CFA7 = {
 			isa = PBXGroup;
 			children = (
 				41CAD9302F76DA9E00A8CFA7 /* Adhkar Ai */,
+				576232CA2F813EF800E54D38 /* Adhkar Ai */,
+				576232DA2F813EF900E54D38 /* Adhkar AiTests */,
+				576232E42F813EF900E54D38 /* Adhkar AiUITests */,
 				41CAD92F2F76DA9E00A8CFA7 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -26,11 +91,85 @@
 		41CAD92F2F76DA9E00A8CFA7 /* Products */ = {
 			isa = PBXGroup;
 			children = (
+				576232C92F813EF800E54D38 /* Adhkar Ai.app */,
+				576232D72F813EF900E54D38 /* Adhkar AiTests.xctest */,
+				576232E12F813EF900E54D38 /* Adhkar AiUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		576232C82F813EF800E54D38 /* Adhkar Ai */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 576232E92F813EF900E54D38 /* Build configuration list for PBXNativeTarget "Adhkar Ai" */;
+			buildPhases = (
+				576232C52F813EF800E54D38 /* Sources */,
+				576232C62F813EF800E54D38 /* Frameworks */,
+				576232C72F813EF800E54D38 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				576232CA2F813EF800E54D38 /* Adhkar Ai */,
+			);
+			name = "Adhkar Ai";
+			packageProductDependencies = (
+			);
+			productName = "Adhkar Ai";
+			productReference = 576232C92F813EF800E54D38 /* Adhkar Ai.app */;
+			productType = "com.apple.product-type.application";
+		};
+		576232D62F813EF900E54D38 /* Adhkar AiTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 576232EC2F813EF900E54D38 /* Build configuration list for PBXNativeTarget "Adhkar AiTests" */;
+			buildPhases = (
+				576232D32F813EF900E54D38 /* Sources */,
+				576232D42F813EF900E54D38 /* Frameworks */,
+				576232D52F813EF900E54D38 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				576232D92F813EF900E54D38 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				576232DA2F813EF900E54D38 /* Adhkar AiTests */,
+			);
+			name = "Adhkar AiTests";
+			packageProductDependencies = (
+			);
+			productName = "Adhkar AiTests";
+			productReference = 576232D72F813EF900E54D38 /* Adhkar AiTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		576232E02F813EF900E54D38 /* Adhkar AiUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 576232EF2F813EF900E54D38 /* Build configuration list for PBXNativeTarget "Adhkar AiUITests" */;
+			buildPhases = (
+				576232DD2F813EF900E54D38 /* Sources */,
+				576232DE2F813EF900E54D38 /* Frameworks */,
+				576232DF2F813EF900E54D38 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				576232E32F813EF900E54D38 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				576232E42F813EF900E54D38 /* Adhkar AiUITests */,
+			);
+			name = "Adhkar AiUITests";
+			packageProductDependencies = (
+			);
+			productName = "Adhkar AiUITests";
+			productReference = 576232E12F813EF900E54D38 /* Adhkar AiUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
 		41CAD9262F76DA9E00A8CFA7 /* Project object */ = {
@@ -39,6 +178,19 @@
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 2640;
 				LastUpgradeCheck = 2640;
+				TargetAttributes = {
+					576232C82F813EF800E54D38 = {
+						CreatedOnToolsVersion = 26.4;
+					};
+					576232D62F813EF900E54D38 = {
+						CreatedOnToolsVersion = 26.4;
+						TestTargetID = 576232C82F813EF800E54D38;
+					};
+					576232E02F813EF900E54D38 = {
+						CreatedOnToolsVersion = 26.4;
+						TestTargetID = 576232C82F813EF800E54D38;
+					};
+				};
 			};
 			buildConfigurationList = 41CAD9292F76DA9E00A8CFA7 /* Build configuration list for PBXProject "Adhkar Ai" */;
 			developmentRegion = en;
@@ -54,9 +206,73 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
+				576232C82F813EF800E54D38 /* Adhkar Ai */,
+				576232D62F813EF900E54D38 /* Adhkar AiTests */,
+				576232E02F813EF900E54D38 /* Adhkar AiUITests */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		576232C72F813EF800E54D38 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		576232D52F813EF900E54D38 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		576232DF2F813EF900E54D38 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		576232C52F813EF800E54D38 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		576232D32F813EF900E54D38 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		576232DD2F813EF900E54D38 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		576232D92F813EF900E54D38 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 576232C82F813EF800E54D38 /* Adhkar Ai */;
+			targetProxy = 576232D82F813EF900E54D38 /* PBXContainerItemProxy */;
+		};
+		576232E32F813EF900E54D38 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 576232C82F813EF800E54D38 /* Adhkar Ai */;
+			targetProxy = 576232E22F813EF900E54D38 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		41CAD9372F76DAA000A8CFA7 /* Debug */ = {
@@ -112,7 +328,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -170,13 +386,204 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		576232EA2F813EF900E54D38 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = N2Y45BHGKV;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 26.4;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "Reshi.Adhkar-Ai";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = auto;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				XROS_DEPLOYMENT_TARGET = 26.4;
+			};
+			name = Debug;
+		};
+		576232EB2F813EF900E54D38 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = N2Y45BHGKV;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 26.4;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "Reshi.Adhkar-Ai";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = auto;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				XROS_DEPLOYMENT_TARGET = 26.4;
+			};
+			name = Release;
+		};
+		576232ED2F813EF900E54D38 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = N2Y45BHGKV;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MACOSX_DEPLOYMENT_TARGET = 26.4;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "Reshi.Adhkar-AiTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Adhkar Ai.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Adhkar Ai";
+				XROS_DEPLOYMENT_TARGET = 26.4;
+			};
+			name = Debug;
+		};
+		576232EE2F813EF900E54D38 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = N2Y45BHGKV;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MACOSX_DEPLOYMENT_TARGET = 26.4;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "Reshi.Adhkar-AiTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Adhkar Ai.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Adhkar Ai";
+				XROS_DEPLOYMENT_TARGET = 26.4;
+			};
+			name = Release;
+		};
+		576232F02F813EF900E54D38 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = N2Y45BHGKV;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MACOSX_DEPLOYMENT_TARGET = 26.4;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "Reshi.Adhkar-AiUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TEST_TARGET_NAME = "Adhkar Ai";
+				XROS_DEPLOYMENT_TARGET = 26.4;
+			};
+			name = Debug;
+		};
+		576232F12F813EF900E54D38 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = N2Y45BHGKV;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MACOSX_DEPLOYMENT_TARGET = 26.4;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "Reshi.Adhkar-AiUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TEST_TARGET_NAME = "Adhkar Ai";
+				XROS_DEPLOYMENT_TARGET = 26.4;
 			};
 			name = Release;
 		};
@@ -188,6 +595,33 @@
 			buildConfigurations = (
 				41CAD9372F76DAA000A8CFA7 /* Debug */,
 				41CAD9382F76DAA000A8CFA7 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		576232E92F813EF900E54D38 /* Build configuration list for PBXNativeTarget "Adhkar Ai" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				576232EA2F813EF900E54D38 /* Debug */,
+				576232EB2F813EF900E54D38 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		576232EC2F813EF900E54D38 /* Build configuration list for PBXNativeTarget "Adhkar AiTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				576232ED2F813EF900E54D38 /* Debug */,
+				576232EE2F813EF900E54D38 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		576232EF2F813EF900E54D38 /* Build configuration list for PBXNativeTarget "Adhkar AiUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				576232F02F813EF900E54D38 /* Debug */,
+				576232F12F813EF900E54D38 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

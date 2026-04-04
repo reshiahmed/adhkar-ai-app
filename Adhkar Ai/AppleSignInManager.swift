@@ -89,19 +89,25 @@ class AppleSignInManager: NSObject, ASAuthorizationControllerDelegate, ASAuthori
     
     func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
         let scenes = UIApplication.shared.connectedScenes
-        let windowScene = (scenes.first { $0.activationState == .foregroundActive } as? UIWindowScene) ?? 
-                          (scenes.first { $0.activationState == .foregroundInactive } as? UIWindowScene) ??
-                          (scenes.first as? UIWindowScene)
+        let windowScene = scenes.first { $0.activationState == .foregroundActive } as? UIWindowScene ?? 
+                          scenes.first { $0.activationState == .foregroundInactive } as? UIWindowScene ??
+                          scenes.first as? UIWindowScene
         
-        let window = windowScene?.windows.first { $0.isKeyWindow } ?? windowScene?.windows.first
-        
-        if let scene = windowScene {
-            return window ?? UIWindow(windowScene: scene)
+        if let windowScene = windowScene {
+            let window = windowScene.windows.first { $0.isKeyWindow } ?? windowScene.windows.first
+            return window ?? UIWindow(windowScene: windowScene)
         }
         
-        // Final fallback: should be avoidable in modern scene-based apps.
-        // If we reach here, we'll try to find any scene again or use a placeholder.
-        return window ?? UIWindow()
+        // This absolute fallback is only reached if the app has no active scene,
+        // which should not happen during an interactive sign-in flow.
+        // We'll try to find any window from any connected scene to avoid the deprecated init().
+        for scene in scenes {
+            if let windowScene = scene as? UIWindowScene, let window = windowScene.windows.first {
+                return window
+            }
+        }
+        
+        fatalError("ASPresentationAnchor requires a window scene which was not found.")
     }
     
     // MARK: - Helpers

@@ -38,7 +38,7 @@ struct OnboardingView: View {
             type: .benefit,
             title: "The Science of Mastery",
             description: "Memorize effortlessly. Our smart system shows you the right Adhkar at the perfect time so they stay in your heart forever.",
-            systemImage: "brain.headset",
+            systemImage: "brain.fill",
             color: .blue
         ),
         OnboardingStep(

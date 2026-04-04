@@ -28,8 +28,6 @@ struct MasteryView: View {
 
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 0) {
-                    // Header spacer (for fixed glass header + status bar)
-                    Color.clear.frame(height: 110)
 
                     // Header
                     VStack(alignment: .leading, spacing: 4) {

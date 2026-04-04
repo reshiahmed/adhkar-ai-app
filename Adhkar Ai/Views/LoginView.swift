@@ -72,12 +72,18 @@ struct LoginView: View {
                                 
                                 if mode == .login {
                                     Button("Forgot Password?") {
-                                        withAnimation { mode = .forgotPassword }
+                                        withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) { 
+                                            mode = .forgotPassword 
+                                        }
                                     }
                                     .font(.system(size: 13, weight: .medium))
                                     .foregroundColor(.primaryGreen)
                                 }
                             }
+                            .transition(.asymmetric(
+                                insertion: .opacity.combined(with: .move(edge: .top)), 
+                                removal: .opacity.combined(with: .move(edge: .bottom))
+                            ))
                         }
                         
                         if mode == .signup {
@@ -109,25 +115,6 @@ struct LoginView: View {
                     }
                     .disabled(isLoading)
 
-                    // Apple Sign In Button
-                    Button {
-                        handleAppleSignIn()
-                    } label: {
-                        HStack(spacing: 8) {
-                            Image(systemName: "applelogo")
-                                .font(.system(size: 18))
-                            Text("Sign in with Apple")
-                                .font(.system(size: 17, weight: .semibold, design: .rounded))
-                        }
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 54)
-                        .background(Color.black)
-                        .cornerRadius(16)
-                        .cardShadow()
-                    }
-                    .disabled(isLoading)
-                    .padding(.top, -8) // Tighten spacing with the button above
 
                     // Secondary Navigation
                     HStack(spacing: 6) {

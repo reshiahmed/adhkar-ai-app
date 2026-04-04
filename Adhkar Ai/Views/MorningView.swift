@@ -25,7 +25,6 @@ struct MorningView: View {
 
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 0) {
-                    Color.clear.frame(height: 110)
 
                     morningHeader
                     
