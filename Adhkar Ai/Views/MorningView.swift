@@ -184,14 +184,35 @@ struct MorningView: View {
         Button {
             showResetConfirm = true
         } label: {
-            HStack(spacing: 6) {
-                Image(systemName: "arrow.counterclockwise")
-                Text("Reset Morning Adhkar")
+            HStack(spacing: 12) {
+                ZStack {
+                    Circle()
+                        .fill(Color.divider.opacity(0.1))
+                        .frame(width: 36, height: 36)
+                    Image(systemName: "arrow.counterclockwise")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.textSecondary)
+                }
+                
+                Text("Reset Morning Adhkar Progress")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(.textSecondary)
+                
+                Spacer()
+                
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundColor(.textSecondary.opacity(0.3))
             }
-            .font(.system(size: 14, weight: .medium))
-            .foregroundColor(.textSecondary)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 16)
+            .background(Color.cardBackground)
+            .cornerRadius(20)
+            .cardShadow()
         }
-        .padding(.bottom, 8)
+        .padding(.horizontal, 16)
+        .padding(.top, 12)
+        .padding(.bottom, 20)
     }
 }
 

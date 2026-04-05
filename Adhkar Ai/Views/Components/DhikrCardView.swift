@@ -32,12 +32,13 @@ struct DhikrCardView: View {
             // 1. Arabic Text (Top)
             Text(dhikr.arabic)
                 .font(.custom(appState.arabicFontName == "System" ? "" : appState.arabicFontName, size: appState.arabicFontSize))
-                .lineSpacing(appState.arabicLineSpacing)
+                .lineSpacing(10) // Safe hardcoded spacing for Tashkeel clarity
                 .multilineTextAlignment(.trailing)
                 .environment(\.layoutDirection, .rightToLeft)
                 .foregroundColor(.textPrimary)
                 .frame(maxWidth: .infinity, alignment: .trailing)
-                .fixedSize(horizontal: false, vertical: true) // Fix truncation
+                .fixedSize(horizontal: false, vertical: true)
+                .lineLimit(nil)
                 .padding(.horizontal, 16)
                 .padding(.top, 20)
                 .padding(.bottom, 12)
@@ -47,17 +48,19 @@ struct DhikrCardView: View {
                 VStack(alignment: .leading, spacing: 10) {
                     if appState.showTransliteration && !dhikr.transliteration.isEmpty {
                         Text(dhikr.transliteration)
-                            .font(.system(size: appState.englishFontSize, weight: .regular, design: .rounded))
+                            .font(.system(size: appState.transliterationFontSize, weight: .regular, design: .rounded))
                             .italic()
                             .foregroundColor(.secondaryGreen)
+                            .lineLimit(nil)
                             .fixedSize(horizontal: false, vertical: true)
                     }
 
                     if appState.showTranslation && !dhikr.translation.isEmpty {
                         Text(dhikr.translation)
-                            .font(.system(size: appState.englishFontSize))
+                            .font(.system(size: appState.translationFontSize))
                             .foregroundColor(.textSecondary)
                             .lineSpacing(4)
+                            .lineLimit(nil)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 }
@@ -68,55 +71,59 @@ struct DhikrCardView: View {
 
             // 3. Interactive Bottom Row
             HStack(alignment: .center, spacing: 12) {
-                // Counter Label (e.g. 1/3x)
-                if showCounter {
-                    Text(counterLabel)
-                        .font(.system(size: 13, weight: .bold, design: .rounded))
-                        .foregroundColor(dhikr.isCompleted ? .white : .primaryGreen)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 5)
-                        .background(dhikr.isCompleted ? Color.primaryGreen : Color.lightGreen)
-                        .cornerRadius(10)
-                }
-
-                Spacer()
-
-                // Source Tag
+                // Source Tag (Now on the Left)
                 if let source = dhikr.source, !source.isEmpty {
                     Text(source)
                         .font(.system(size: 11, weight: .medium))
                         .foregroundColor(.textSecondary)
                         .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .background(Color.appBackground.opacity(0.5))
+                        .padding(.vertical, 4)
+                        .background(Color.appBackground.opacity(0.6))
                         .cornerRadius(AppRadius.full)
+                        .lineLimit(nil)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                Spacer()
+
+                // Counter Label (Now next to the button)
+                if showCounter {
+                    Text(counterLabel)
+                        .font(.system(size: 13, weight: .bold, design: .rounded))
+                        .foregroundColor(dhikr.isCompleted ? .white : .primaryGreen)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(dhikr.isCompleted ? Color.primaryGreen : Color.lightGreen)
+                        .cornerRadius(12)
                 }
 
                 // Action Button (Increment or Visibility Toggle)
-                Button {
-                    if isEditMode {
-                        onToggleVisibility()
-                    } else {
-                        onIncrement()
-                        if dhikr.currentCount + 1 >= dhikr.repetitions {
-                            triggerCompletionBurst()
+                if isEditMode || showCounter {
+                    Button {
+                        if isEditMode {
+                            onToggleVisibility()
+                        } else {
+                            onIncrement()
+                            if dhikr.currentCount + 1 >= dhikr.repetitions {
+                                triggerCompletionBurst()
+                            }
+                        }
+                    } label: {
+                        ZStack {
+                            Circle()
+                                .fill(actionButtonColor)
+                                .frame(width: 44, height: 44)
+                                .cardShadow()
+
+                            Image(systemName: actionButtonIcon)
+                                .font(.system(size: 18, weight: .bold))
+                                .foregroundColor(actionButtonContentColor)
                         }
                     }
-                } label: {
-                    ZStack {
-                        Circle()
-                            .fill(actionButtonColor)
-                            .frame(width: 44, height: 44)
-                            .cardShadow()
-
-                        Image(systemName: actionButtonIcon)
-                            .font(.system(size: 18, weight: .bold))
-                            .foregroundColor(actionButtonContentColor)
-                    }
+                    .scaleEffect(showCompletionBurst ? 1.15 : 1.0)
+                    .animation(.spring(response: 0.3, dampingFraction: 0.5), value: showCompletionBurst)
+                    .disabled(!isEditMode && dhikr.isCompleted)
                 }
-                .scaleEffect(showCompletionBurst ? 1.15 : 1.0)
-                .animation(.spring(response: 0.3, dampingFraction: 0.5), value: showCompletionBurst)
-                .disabled(!isEditMode && dhikr.isCompleted)
             }
             .padding(.horizontal, 16)
             .padding(.bottom, 16)

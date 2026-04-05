@@ -5,17 +5,26 @@ import SwiftUI
 // MARK: - Colors
 extension Color {
     // Primary brand colors (often stable across modes)
-    static let primaryGreen   = Color(hex: "1B8338")
-    static let secondaryGreen = Color(hex: "4A7C59")
-    static let lightGreen     = Color(hex: "E8F5EC", dark: "1B2A1F")
+    // Primary brand colors
+    static var primaryGreen: Color {
+        Color(light: "10B981", dark: "34D399") // Emerald for Light, Neon-Mint for Dark
+    }
     
-    // UI tokens (dynamic by default)
+    static var secondaryGreen: Color {
+        Color(light: "059669", dark: "10B981")
+    }
+    
+    static var lightGreen: Color {
+        Color(light: "D1FAE5", dark: "064E3B")
+    }
+    
+    // UI tokens
     static var appBackground: Color {
-        Color(light: "EEF1F6", dark: "111827")
+        Color(light: "FFFFFF", dark: "000000") // Pure white / Pure black
     }
     
     static var cardBackground: Color {
-        Color(light: "FFFFFF", dark: "1F2937")
+        Color(light: "F9FAFB", dark: "111827") // Off-white / Deep gray-black
     }
     
     static var textPrimary: Color {
@@ -112,7 +121,7 @@ struct AppRadius {
 // MARK: - Shadow
 extension View {
     func cardShadow() -> some View {
-        self.shadow(color: .black.opacity(0.07), radius: 8, x: 0, y: 3)
+        self.shadow(color: .black.opacity(0.12), radius: 12, x: 0, y: 5)
     }
 
     func subtleShadow() -> some View {

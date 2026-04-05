@@ -23,45 +23,35 @@ struct LoginView: View {
     
     var body: some View {
         ZStack {
-            // Background gradient — matching PWA's soft blue/lavender
-            LinearGradient(
-                colors: [Color(hex: "C8DCF5"), Color(hex: "D8E8F7"), Color(hex: "E8EFF8")],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
+            Color.appBackground.ignoresSafeArea()
 
             VStack(spacing: 0) {
-                Spacer()
+                VStack(spacing: 28) {
+                    Spacer(minLength: 20)
 
-                // Auth Card
-                VStack(spacing: 24) {
-                    
                     // Logo
                     Image("WelcomeLogo")
                         .resizable()
                         .scaledToFit()
-                        .frame(width: 80, height: 80)
-                        .cornerRadius(18)
-                        .padding(.top, 8)
+                        .frame(width: 90, height: 90)
+                        .cornerRadius(22)
 
                     // Title & Description
                     VStack(spacing: 8) {
                         Text(titleText)
-                            .font(.system(size: 26, weight: .bold, design: .rounded))
+                            .font(.system(size: 30, weight: .bold, design: .rounded))
                             .foregroundColor(.textPrimary)
                         Text(subtitleText)
                             .font(.system(size: 15))
                             .foregroundColor(.textSecondary)
                             .multilineTextAlignment(.center)
-                            .padding(.horizontal, 10)
+                            .padding(.horizontal, 32)
                     }
 
                     // Input Form
                     VStack(spacing: 16) {
                         if mode == .signup {
                             LoginField(label: "Full Name", placeholder: "e.g. Abdullah", text: $name, isSecure: false)
-                                .transition(.move(edge: .top).combined(with: .opacity))
                         }
                         
                         LoginField(label: "Email Address", placeholder: "name@example.com", text: $email, isSecure: false)
@@ -72,26 +62,20 @@ struct LoginView: View {
                                 
                                 if mode == .login {
                                     Button("Forgot Password?") {
-                                        withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) { 
-                                            mode = .forgotPassword 
-                                        }
+                                        withAnimation(.spring()) { mode = .forgotPassword }
                                     }
-                                    .font(.system(size: 13, weight: .medium))
+                                    .font(.system(size: 14, weight: .bold))
                                     .foregroundColor(.primaryGreen)
+                                    .padding(.trailing, 4)
                                 }
                             }
-                            .transition(.asymmetric(
-                                insertion: .opacity.combined(with: .move(edge: .top)), 
-                                removal: .opacity.combined(with: .move(edge: .bottom))
-                            ))
                         }
                         
                         if mode == .signup {
                             LoginField(label: "Confirm Password", placeholder: "••••••••", text: $confirmPassword, isSecure: true)
-                                .transition(.move(edge: .bottom).combined(with: .opacity))
                         }
                     }
-                    .animation(.spring(response: 0.4, dampingFraction: 0.8), value: mode)
+                    .padding(.horizontal, 24)
 
                     // Primary Action Button
                     Button {
@@ -99,8 +83,7 @@ struct LoginView: View {
                     } label: {
                         ZStack {
                             if isLoading {
-                                ProgressView()
-                                    .tint(.white)
+                                ProgressView().tint(.white)
                             } else {
                                 Text(primaryButtonText)
                                     .font(.system(size: 17, weight: .bold))
@@ -110,11 +93,11 @@ struct LoginView: View {
                         .frame(maxWidth: .infinity)
                         .frame(height: 54)
                         .background(Color.primaryGreen)
-                        .cornerRadius(16)
+                        .cornerRadius(18)
                         .cardShadow()
                     }
+                    .padding(.horizontal, 24)
                     .disabled(isLoading)
-
 
                     // Secondary Navigation
                     HStack(spacing: 6) {
@@ -131,45 +114,35 @@ struct LoginView: View {
                         .foregroundColor(.primaryGreen)
                     }
                     
-                    Divider()
-                        .padding(.vertical, 8)
+                    Divider().padding(.horizontal, 40).padding(.vertical, 8)
 
                     // Offline/Dev Mode Bypass
-                    VStack(spacing: 12) {
+                    VStack(spacing: 8) {
                         Button {
-                            withAnimation {
-                                appState.loginOffline()
-                            }
+                            withAnimation { appState.loginOffline() }
                         } label: {
                             HStack(spacing: 10) {
                                 Image(systemName: "wifi.slash")
-                                    .font(.system(size: 14, weight: .semibold))
-                                Text("Continue Offline / Explore")
+                                    .font(.system(size: 14, weight: .bold))
+                                Text("Continue Offline")
                                     .font(.system(size: 14, weight: .bold))
                             }
                             .foregroundColor(.textPrimary)
                             .frame(maxWidth: .infinity)
-                            .frame(height: 48)
-                            .background(Color.appBackground)
-                            .cornerRadius(12)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(Color.divider, lineWidth: 1)
-                            )
+                            .frame(height: 50)
+                            .background(Color.cardBackground)
+                            .cornerRadius(16)
+                            .cardShadow()
                         }
+                        .padding(.horizontal, 24)
                         
-                        Text("Bypass authentication for development or local use.")
+                        Text("No account needed for local explore.")
                             .font(.system(size: 11))
-                            .foregroundColor(.textSecondary)
+                            .foregroundColor(.textSecondary.opacity(0.5))
                     }
-                }
-                .padding(24)
-                .background(Color.cardBackground)
-                .cornerRadius(32)
-                .cardShadow()
-                .padding(.horizontal, 22)
 
-                Spacer()
+                    Spacer(minLength: 40)
+                }
             }
         }
         .alert("Auth Info", isPresented: $showAlert) {

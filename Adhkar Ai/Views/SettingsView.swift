@@ -5,7 +5,7 @@ struct SettingsView: View {
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var appState: AppState
     
-    let arabicFonts = ["System", "Amiri", "Scheherazade", "Lateef"]
+    let arabicFonts = ["System", "Geeza Pro", "DecoType Naskh", "Damascus", "Baghdad", "Diwan Kufi", "Muna"]
 
     var body: some View {
         NavigationStack {
@@ -15,66 +15,70 @@ struct SettingsView: View {
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 24) {
                         
-                        // 1. Live Preview Section
-                        VStack(alignment: .leading, spacing: 12) {
+                        // 1. Live Preview & Fine-Tuning
+                        VStack(alignment: .leading, spacing: 16) {
                             Text("Live Preview")
                                 .font(.system(size: 14, weight: .bold))
                                 .foregroundColor(.textSecondary)
                                 .padding(.horizontal, 16)
                             
-                            PreviewDhikrCard()
-                                .padding(.horizontal, 16)
+                            VStack(spacing: 0) {
+                                PreviewDhikrCard()
+                                    .padding(.bottom, 16)
+                                
+                                VStack(spacing: 0) {
+                                    // Arabic Font Size
+                                    SettingsSliderRow(
+                                        icon: "textformat.size",
+                                        iconColor: .primaryGreen,
+                                        label: "Arabic Size",
+                                        value: $appState.arabicFontSize,
+                                        range: 20...52
+                                    )
+                                    
+                                    if appState.showTransliteration {
+                                        Divider().padding(.leading, 56)
+                                        SettingsSliderRow(
+                                            icon: "textformat",
+                                            iconColor: Color(hex: "3B82F6"),
+                                            label: "Transliteration",
+                                            value: $appState.transliterationFontSize,
+                                            range: 12...24
+                                        )
+                                    }
+                                    
+                                    if appState.showTranslation {
+                                        Divider().padding(.leading, 56)
+                                        SettingsSliderRow(
+                                            icon: "textformat.size",
+                                            iconColor: Color(hex: "8B5CF6"),
+                                            label: "Translation",
+                                            value: $appState.translationFontSize,
+                                            range: 12...26
+                                        )
+                                    }
+                                }
+                                .background(Color.cardBackground)
+                                .cornerRadius(20)
+                            }
+                            .padding(.horizontal, 16)
                         }
                         
-                        // 2. Reading Experience Section
+                        // 2. Arabic Typeface Style
                         VStack(alignment: .leading, spacing: 16) {
-                            Text("Reading Experience")
+                            Text("Arabic Typeface")
                                 .font(.system(size: 14, weight: .bold))
                                 .foregroundColor(.textSecondary)
                                 .padding(.horizontal, 16)
                             
                             VStack(spacing: 0) {
-                                // Arabic Font Size
-                                SettingsSliderRow(
-                                    icon: "textformat.size",
-                                    iconColor: .primaryGreen,
-                                    label: "Arabic Font Size",
-                                    value: $appState.arabicFontSize,
-                                    range: 20...48
-                                )
-                                
-                                Divider().padding(.leading, 56)
-                                
-                                // Arabic Line Spacing
-                                SettingsSliderRow(
-                                    icon: "line.horizontal.3",
-                                    iconColor: .primaryGreen,
-                                    label: "Line Spacing",
-                                    value: $appState.arabicLineSpacing,
-                                    range: 0...24
-                                )
-                                
-                                SettingsSliderRow(
-                                    icon: "textformat",
-                                    iconColor: .primaryGreen,
-                                    label: "English Font Size",
-                                    value: $appState.englishFontSize,
-                                    range: 12...24
-                                )
-                                
-                                Divider().padding(.leading, 56)
-                                
-                                // Arabic Font Style
-                                SettingsPickerRow(
-                                    icon: "text.justify.right",
-                                    iconColor: .primaryGreen,
-                                    label: "Arabic Font",
-                                    selection: $appState.arabicFontName,
-                                    options: arabicFonts
+                                ArabicFontGalleryRow(
+                                    selectedFont: $appState.arabicFontName,
+                                    fonts: arabicFonts
                                 )
                             }
                             .background(Color.cardBackground)
-                            .cornerRadius(16)
+                            .cornerRadius(20)
                             .cardShadow()
                             .padding(.horizontal, 16)
                         }
@@ -113,7 +117,7 @@ struct SettingsView: View {
                                 )
                             }
                             .background(Color.cardBackground)
-                            .cornerRadius(16)
+                            .cornerRadius(20)
                             .cardShadow()
                             .padding(.horizontal, 16)
                         }
@@ -127,6 +131,28 @@ struct SettingsView: View {
                             
                             ThemeSelectionGroup()
                                 .padding(.horizontal, 16)
+                        }
+                        
+                        // 5. Reset Section
+                        VStack(alignment: .leading, spacing: 16) {
+                            Button {
+                                withAnimation(.spring()) {
+                                    appState.resetToDefaults()
+                                }
+                            } label: {
+                                HStack {
+                                    Image(systemName: "arrow.counterclockwise")
+                                    Text("Reset to Default Settings")
+                                }
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundColor(.textSecondary)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 16)
+                                .background(Color.cardBackground)
+                                .cornerRadius(20)
+                                .cardShadow()
+                            }
+                            .padding(.horizontal, 16)
                         }
                         
                         // Spacer for bottom pill
@@ -163,7 +189,7 @@ struct PreviewDhikrCard: View {
             
             if appState.showTransliteration {
                 Text("SubhanAllahi wa bihamdihi")
-                    .font(.system(size: appState.englishFontSize, weight: .medium, design: .serif))
+                    .font(.system(size: appState.transliterationFontSize, weight: .medium, design: .rounded))
                     .italic()
                     .foregroundColor(.primaryGreen)
                     .multilineTextAlignment(.center)
@@ -171,7 +197,7 @@ struct PreviewDhikrCard: View {
             
             if appState.showTranslation {
                 Text("Glory is to Allah and praise is to Him.")
-                    .font(.system(size: appState.englishFontSize))
+                    .font(.system(size: appState.translationFontSize))
                     .foregroundColor(.textSecondary)
                     .multilineTextAlignment(.center)
                     .lineLimit(2)
@@ -312,6 +338,77 @@ struct ThemeSelectionGroup: View {
                 }
                 .buttonStyle(PlainButtonStyle())
             }
+        }
+    }
+}
+
+struct ArabicFontGalleryRow: View {
+    @Binding var selectedFont: String
+    let fonts: [String]
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 12) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(Color.primaryGreen.opacity(0.1))
+                        .frame(width: 32, height: 32)
+                    Image(systemName: "text.justify.right")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.primaryGreen)
+                }
+                Text("Arabic Font Style")
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundColor(.textPrimary)
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 16)
+            
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 12) {
+                    ForEach(fonts, id: \.self) { font in
+                        FontPreviewChip(
+                            name: font,
+                            isSelected: selectedFont == font
+                        ) {
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                selectedFont = font
+                            }
+                        }
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.bottom, 20)
+            }
+        }
+    }
+}
+
+struct FontPreviewChip: View {
+    let name: String
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 8) {
+                Text("الذِّكْر")
+                    .font(.custom(name == "System" ? "" : name, size: 22))
+                    .foregroundColor(isSelected ? .white : .textPrimary)
+                    .frame(width: 80, height: 54)
+                
+                Text(name)
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundColor(isSelected ? .white.opacity(0.8) : .textSecondary)
+            }
+            .padding(.vertical, 12)
+            .padding(.horizontal, 16)
+            .background(isSelected ? Color.primaryGreen : Color.divider.opacity(0.05))
+            .cornerRadius(18)
+            .overlay(
+                RoundedRectangle(cornerRadius: 18)
+                    .stroke(isSelected ? Color.primaryGreen : Color.divider.opacity(0.1), lineWidth: 1)
+            )
         }
     }
 }

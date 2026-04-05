@@ -18,8 +18,8 @@ class AppState: ObservableObject {
         static let arabicFontName = "adhkar.arabicFontName"
         static let showTransliteration = "adhkar.showTransliteration"
         static let showTranslation = "adhkar.showTranslation"
-        static let arabicLineSpacing = "adhkar.arabicLineSpacing"
-        static let englishFontSize = "adhkar.englishFontSize"
+        static let transliterationFontSize = "adhkar.transliterationFontSize"
+        static let translationFontSize = "adhkar.translationFontSize"
         static let showSearchBars = "adhkar.showSearchBars"
         static let hasCompletedOnboarding = "adhkar.hasCompletedOnboarding"
         static let hasCompletedTour = "adhkar.hasCompletedTour"
@@ -63,17 +63,17 @@ class AppState: ObservableObject {
             objectWillChange.send()
         }
     }
-
-    @Published var arabicLineSpacing: Double = 8 {
+    
+    @Published var transliterationFontSize: Double = 14 {
         didSet {
-            defaults.set(arabicLineSpacing, forKey: StorageKey.arabicLineSpacing)
+            defaults.set(transliterationFontSize, forKey: StorageKey.transliterationFontSize)
             objectWillChange.send()
         }
     }
     
-    @Published var englishFontSize: Double = 14 {
+    @Published var translationFontSize: Double = 14 {
         didSet {
-            defaults.set(englishFontSize, forKey: StorageKey.englishFontSize)
+            defaults.set(translationFontSize, forKey: StorageKey.translationFontSize)
             objectWillChange.send()
         }
     }
@@ -151,11 +151,11 @@ class AppState: ObservableObject {
     @Published var masteryMetadata: [String: MasteryMetadata] = [:]
 
     // MARK: - Logic & Helpers
-    var morningCompleted: Int { morningAdhkar.filter(\.isCompleted).count }
+    var morningCompleted: Int { morningAdhkar.filter { $0.isVisible && $0.isCompleted }.count }
     var morningTotal: Int { morningAdhkar.filter(\.isVisible).count }
     var morningAllDone: Bool { morningCompleted >= morningTotal && morningTotal > 0 }
 
-    var eveningCompleted: Int { eveningAdhkar.filter(\.isCompleted).count }
+    var eveningCompleted: Int { eveningAdhkar.filter { $0.isVisible && $0.isCompleted }.count }
     var eveningTotal: Int { eveningAdhkar.filter(\.isVisible).count }
     var eveningAllDone: Bool { eveningCompleted >= eveningTotal && eveningTotal > 0 }
 
@@ -233,9 +233,6 @@ class AppState: ObservableObject {
         let savedSize = defaults.double(forKey: StorageKey.arabicFontSize)
         if savedSize > 0 { arabicFontSize = savedSize }
         
-        let savedSpacing = defaults.double(forKey: StorageKey.arabicLineSpacing)
-        if savedSpacing > 0 { arabicLineSpacing = savedSpacing }
-        
         if let savedFont = defaults.string(forKey: StorageKey.arabicFontName) {
             arabicFontName = savedFont
         }
@@ -248,8 +245,12 @@ class AppState: ObservableObject {
             showTranslation = defaults.bool(forKey: StorageKey.showTranslation)
         }
         
-        if let savedEnglishSize = defaults.object(forKey: StorageKey.englishFontSize) as? Double {
-            englishFontSize = savedEnglishSize
+        if let savedTransliterationSize = defaults.object(forKey: StorageKey.transliterationFontSize) as? Double {
+            transliterationFontSize = savedTransliterationSize
+        }
+        
+        if let savedTranslationSize = defaults.object(forKey: StorageKey.translationFontSize) as? Double {
+            translationFontSize = savedTranslationSize
         }
         
         if defaults.object(forKey: StorageKey.showSearchBars) != nil {
@@ -272,31 +273,31 @@ class AppState: ObservableObject {
     }
 
     var morningProgressPct: Int {
-        let total = morningAdhkar.filter(\.isVisible).count
-        guard total > 0 else { return 0 }
-        let completed = morningAdhkar.filter(\.isCompleted).count
-        return Int(Double(completed) / Double(total) * 100)
+        let visible = morningAdhkar.filter(\.isVisible)
+        guard !visible.isEmpty else { return 0 }
+        let completed = visible.filter(\.isCompleted).count
+        return Int(Double(completed) / Double(visible.count) * 100)
     }
     
     var eveningProgressPct: Int {
-        let total = eveningAdhkar.filter(\.isVisible).count
-        guard total > 0 else { return 0 }
-        let completed = eveningAdhkar.filter(\.isCompleted).count
-        return Int(Double(completed) / Double(total) * 100)
+        let visible = eveningAdhkar.filter(\.isVisible)
+        guard !visible.isEmpty else { return 0 }
+        let completed = visible.filter(\.isCompleted).count
+        return Int(Double(completed) / Double(visible.count) * 100)
     }
     
     var dailyProgressPct: Int {
-        let allDaily = dailyCategories.flatMap { $0.adhkar }.filter(\.isVisible)
-        guard !allDaily.isEmpty else { return 0 }
-        let completed = allDaily.filter(\.isCompleted).count
-        return Int(Double(completed) / Double(allDaily.count) * 100)
+        let visible = dailyCategories.flatMap { $0.adhkar }.filter(\.isVisible)
+        guard !visible.isEmpty else { return 0 }
+        let completed = visible.filter(\.isCompleted).count
+        return Int(Double(completed) / Double(visible.count) * 100)
     }
 
     var overallMasteryPct: Int {
-        let allItems = (morningAdhkar + eveningAdhkar).filter(\.isVisible).count + 
-                      dailyCategories.flatMap { $0.adhkar }.filter(\.isVisible).count
-        guard allItems > 0 else { return 0 }
-        return Int(Double(memorizedCount) / Double(allItems) * 100)
+        let visibleCount = (morningAdhkar + eveningAdhkar).filter(\.isVisible).count + 
+                          dailyCategories.flatMap { $0.adhkar }.filter(\.isVisible).count
+        guard visibleCount > 0 else { return 0 }
+        return Int(Double(memorizedCount) / Double(visibleCount) * 100)
     }
 
     var itemsDueToday: [Dhikr] {
@@ -755,6 +756,21 @@ class AppState: ObservableObject {
         let words = text.components(separatedBy: .whitespacesAndNewlines).filter { !$0.isEmpty }
         return words.enumerated().map { (index, word) in
             DhikrSegment(id: index, content: word)
+        }
+    }
+
+    // MARK: - Settings Persistence
+    func resetToDefaults() {
+        withAnimation(.spring()) {
+            arabicFontSize = 26
+            arabicFontName = "System"
+            transliterationFontSize = 14
+            translationFontSize = 14
+            showTransliteration = true
+            showTranslation = true
+            showSearchBars = true
+            themeMode = .auto
+            persistState()
         }
     }
 }

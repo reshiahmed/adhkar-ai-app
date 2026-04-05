@@ -16,39 +16,22 @@ struct ProfileView: View {
 
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 0) {
-                    // Header spacer (for fixed glass header + status bar)
-                    Color.clear.frame(height: 110)
-
-                    // Offline banner
-                    if appState.isOfflineMode {
-                        HStack(spacing: 10) {
-                            Image(systemName: "wifi.slash")
-                                .foregroundColor(Color(hex: "92400E"))
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Offline Mode Active")
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundColor(Color(hex: "92400E"))
-                                Text("Supabase sync is disabled. Working locally.")
-                                    .font(.system(size: 12))
-                                    .foregroundColor(Color(hex: "92400E").opacity(0.8))
-                            }
-                            Spacer()
-                        }
-                        .padding(14)
-                        .background(Color(hex: "FFF3CD"))
-                        .cornerRadius(AppRadius.sm)
-                        .padding(.horizontal, 16)
-                        .padding(.top, 16)
-                        .padding(.bottom, 8)
-                    }
-
                     // Profile card
                     VStack(spacing: 0) {
-                        // Green banner
-                        Rectangle()
-                            .fill(Color.primaryGreen)
-                            .frame(height: 70)
-                            .cornerRadius(AppRadius.md, corners: [.topLeft, .topRight])
+                        // Green banner with integrated Offline Indicator
+                        ZStack(alignment: .topTrailing) {
+                            Rectangle()
+                                .fill(Color.primaryGreen)
+                                .frame(height: 70)
+                                .cornerRadius(AppRadius.md, corners: [.topLeft, .topRight])
+                            
+                            if appState.isOfflineMode {
+                                Image(systemName: "wifi.slash")
+                                    .font(.system(size: 14, weight: .bold))
+                                    .foregroundColor(.white.opacity(0.8))
+                                    .padding(16)
+                            }
+                        }
 
                         // Avatar + name
                         HStack(alignment: .top, spacing: 16) {
