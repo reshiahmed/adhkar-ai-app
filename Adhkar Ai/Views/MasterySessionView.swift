@@ -13,34 +13,52 @@ struct MasterySessionView: View {
     @State private var revealCount: Int = 1
     @State private var showFeedback: Bool = false
     @State private var showTranslation: Bool = false
+    @State private var dragOffset: CGFloat = 0
+    @State private var cardOpacity: Double = 1.0
+    @State private var sessionItems: [Dhikr] = []
+    @State private var isAnimatingSwipe: Bool = false
     
     enum MasteryMode {
         case review
         case test
     }
     
+    private var activeItems: [Dhikr] {
+        sessionItems.isEmpty ? items : sessionItems
+    }
+
     private var currentItem: Dhikr {
-        items[currentIndex]
+        let clamped = max(0, min(currentIndex, activeItems.count - 1))
+        return activeItems[clamped]
     }
     
     private var segments: [DhikrSegment] {
         appState.segmentArabicText(currentItem.arabic)
     }
     
-    private var progress: Double {
-        Double(currentIndex + 1) / Double(items.count)
+    private var revealStep: Int {
+        segments.count > 10 ? 3 : 2
     }
     
+    private var progress: Double {
+        guard activeItems.count > 0 else { return 0 }
+        return Double(currentIndex + 1) / Double(activeItems.count)
+    }
+    
+    // Subtle rotation during drag for natural feel (max ±6 degrees)
+    private var dragRotation: Double {
+        let maxDeg: Double = 6
+        return max(-maxDeg, min(maxDeg, Double(dragOffset) / 40))
+    }
+
     var body: some View {
         ZStack {
             Color.appBackground.ignoresSafeArea()
             
             VStack(spacing: 0) {
-                // Header
+                // MARK: Header
                 HStack {
-                    Button {
-                        dismiss()
-                    } label: {
+                    Button { dismiss() } label: {
                         Image(systemName: "xmark")
                             .font(.system(size: 18, weight: .bold))
                             .foregroundColor(.textSecondary)
@@ -52,8 +70,9 @@ struct MasterySessionView: View {
                             .tint(.primaryGreen)
                             .background(Color.divider)
                             .scaleEffect(x: 1, y: 1.5, anchor: .center)
+                            .animation(.spring(response: 0.4, dampingFraction: 0.8), value: progress)
                         
-                        Text("\(currentIndex + 1) of \(items.count)")
+                        Text("\(currentIndex + 1) of \(activeItems.count)")
                             .font(.system(size: 11, weight: .bold))
                             .foregroundColor(.textSecondary)
                     }
@@ -74,14 +93,14 @@ struct MasterySessionView: View {
                 
                 Spacer()
                 
-                // Card Area
+                // MARK: Card + Feedback (move together during swipe)
                 VStack(spacing: 24) {
-                    // Item Card
-                    VStack(spacing: 20) {
+                    // Card
+                    VStack(spacing: 14) {
                         // Arabic Segments
                         FlowLayout(spacing: 8) {
                             ForEach(segments) { segment in
-                                let index = segments.firstIndex(where: { $0.id == segment.id })!
+                                let index = segments.firstIndex(where: { $0.id == segment.id }) ?? 0
                                 let isRevealed = index < revealCount
                                 
                                 Text(segment.content)
@@ -91,24 +110,25 @@ struct MasterySessionView: View {
                                     .environment(\.layoutDirection, .rightToLeft)
                                     .opacity(isRevealed ? 1.0 : (mode == .test ? 0.0 : 0.05))
                                     .blur(radius: isRevealed ? 0 : (mode == .test ? 0 : 8))
-                                    .scaleEffect(isRevealed ? 1.0 : 0.98)
-                                    .animation(.easeInOut(duration: 0.6), value: revealCount)
+                                    .scaleEffect(isRevealed ? 1.0 : 0.95)
                             }
                         }
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 40)
+                        .padding(.top, 24)
+                        .padding(.bottom, 8)
                         .contentShape(Rectangle())
-                        .onTapGesture {
-                            handleTap()
-                        }
+                        .onTapGesture { handleTap() }
                         
+                        // Translation
                         if showTranslation {
                             VStack(spacing: 12) {
-                                Text(currentItem.transliteration)
-                                    .font(.system(size: 14, weight: .medium, design: .rounded))
-                                    .italic()
-                                    .foregroundColor(.secondaryGreen)
-                                    .multilineTextAlignment(.center)
+                                if !currentItem.transliteration.isEmpty {
+                                    Text(currentItem.transliteration)
+                                        .font(.system(size: 14, weight: .medium, design: .rounded))
+                                        .italic()
+                                        .foregroundColor(.secondaryGreen)
+                                        .multilineTextAlignment(.center)
+                                }
                                 
                                 Text(currentItem.translation)
                                     .font(.system(size: 15))
@@ -127,23 +147,41 @@ struct MasterySessionView: View {
                                 }
                             }
                             .padding(.horizontal, 20)
-                            .transition(.move(edge: .bottom).combined(with: .opacity))
+                            .transition(.opacity.combined(with: .move(edge: .bottom)))
                         }
                         
+                        // Hint
                         if !showFeedback && !showTranslation {
                             Text(revealCount < segments.count ? "Tap to reveal next segment" : "Tap for translation")
                                 .font(.system(size: 12))
                                 .foregroundColor(.textSecondary)
                                 .opacity(0.6)
+                                .transition(.opacity)
                         }
                     }
+                    .id(currentIndex)
                     .padding(24)
-                    .background(Color.cardBackground)
-                    .cornerRadius(32)
+                    .background {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 32, style: .continuous)
+                                .fill(.ultraThinMaterial)
+                            
+                            RoundedRectangle(cornerRadius: 32, style: .continuous)
+                                .strokeBorder(
+                                    LinearGradient(
+                                        colors: [Color.white.opacity(0.4), Color.clear],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    ),
+                                    lineWidth: 0.8
+                                )
+                        }
+                    }
                     .cardShadow()
                     .padding(.horizontal, 20)
+                    .rotationEffect(.degrees(dragRotation), anchor: .bottom)
                     
-                    // Action Buttons
+                    // Feedback Buttons
                     if showFeedback {
                         VStack(spacing: 16) {
                             Text("Did you remember it?")
@@ -163,36 +201,74 @@ struct MasterySessionView: View {
                             }
                         }
                         .padding(.horizontal, 20)
-                        .transition(.scale.combined(with: .opacity))
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
                     }
                 }
+                .offset(x: dragOffset)
+                .opacity(cardOpacity)
+                .gesture(
+                    DragGesture(minimumDistance: 15)
+                        .onChanged { value in
+                            guard !isAnimatingSwipe else { return }
+                            let translation = value.translation.width
+                            // Rubber-band resistance at edges
+                            if (translation > 0 && currentIndex == 0) ||
+                               (translation < 0 && currentIndex >= activeItems.count - 1) {
+                                dragOffset = translation * 0.3
+                            } else {
+                                dragOffset = translation
+                            }
+                        }
+                        .onEnded { value in
+                            guard !isAnimatingSwipe else { return }
+                            let threshold: CGFloat = 60
+                            let velocity = value.predictedEndTranslation.width - value.translation.width
+                            let translation = value.translation.width
+                            
+                            // Swipe left -> next
+                            if (translation < -threshold || velocity < -300) && currentIndex < activeItems.count - 1 {
+                                performSwipe(toNext: true)
+                            }
+                            // Swipe right -> previous
+                            else if (translation > threshold || velocity > 300) && currentIndex > 0 {
+                                performSwipe(toNext: false)
+                            }
+                            // Swipe left on last card -> dismiss
+                            else if (translation < -threshold || velocity < -300) && currentIndex >= activeItems.count - 1 {
+                                dismissWithSwipe()
+                            }
+                            // Below threshold -> snap back
+                            else {
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                                    dragOffset = 0
+                                    cardOpacity = 1.0
+                                }
+                            }
+                        }
+                )
                 
                 Spacer()
                 
-                // Footer Navigation
+                // MARK: Footer Navigation
                 HStack {
                     Button {
-                        if currentIndex > 0 {
-                            withAnimation {
-                                currentIndex -= 1
-                                resetState()
-                            }
-                        }
+                        guard !isAnimatingSwipe, currentIndex > 0 else { return }
+                        performSwipe(toNext: false)
                     } label: {
                         Image(systemName: "chevron.left")
                             .font(.system(size: 18, weight: .bold))
                             .foregroundColor(currentIndex > 0 ? .textPrimary : .divider)
                     }
-                    .disabled(currentIndex == 0)
+                    .disabled(currentIndex == 0 || isAnimatingSwipe)
                     
                     Spacer()
                     
                     if revealCount < segments.count {
                         Button {
-                            withAnimation {
+                            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                                 revealCount = segments.count
                                 showTranslation = true
-                                showFeedback = true
+                                if mode == .test { showFeedback = true }
                             }
                         } label: {
                             Text("Reveal All")
@@ -208,58 +284,115 @@ struct MasterySessionView: View {
                     Spacer()
                     
                     Button {
-                        if currentIndex < items.count - 1 {
-                            withAnimation {
-                                currentIndex += 1
-                                resetState()
-                            }
+                        guard !isAnimatingSwipe else { return }
+                        if currentIndex < activeItems.count - 1 {
+                            performSwipe(toNext: true)
                         } else {
                             dismiss()
                         }
                     } label: {
-                        Image(systemName: currentIndex < items.count - 1 ? "chevron.right" : "checkmark")
+                        Image(systemName: currentIndex < activeItems.count - 1 ? "chevron.right" : "checkmark")
                             .font(.system(size: 18, weight: .bold))
                             .foregroundColor(.textPrimary)
                     }
+                    .disabled(isAnimatingSwipe)
                 }
                 .padding(.horizontal, 32)
                 .padding(.bottom, 20)
             }
         }
         .navigationBarHidden(true)
+        .onAppear {
+            sessionItems = mode == .review ? items.shuffled() : items
+            currentIndex = 0
+            resetState()
+        }
     }
     
+    // MARK: - Actions
+    
     private func handleTap() {
+        guard !isAnimatingSwipe else { return }
+        
         if revealCount < segments.count {
-            withAnimation(.easeInOut(duration: 0.6)) {
-                revealCount += 1
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
+                revealCount = min(revealCount + revealStep, segments.count)
             }
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
         } else if !showTranslation {
-            withAnimation {
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                 showTranslation = true
-                showFeedback = true
+                if mode == .test { showFeedback = true }
             }
             UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         }
     }
     
     private func resetState() {
-        revealCount = mode == .review ? segments.count : 1
-        showFeedback = mode == .review
+        let newSegments = appState.segmentArabicText(currentItem.arabic)
+        let step = newSegments.count > 10 ? 3 : 2
+        revealCount = mode == .review ? newSegments.count : step
+        showFeedback = false
         showTranslation = mode == .review
     }
     
     private func submitFeedback(_ score: Int) {
         appState.updateMasterySRS(id: currentItem.id, confidence: score)
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         
-        if currentIndex < items.count - 1 {
-            withAnimation {
-                currentIndex += 1
-                resetState()
-            }
+        if currentIndex < activeItems.count - 1 {
+            performSwipe(toNext: true)
         } else {
+            dismissWithSwipe()
+        }
+    }
+    
+    private func dismissWithSwipe() {
+        let screenWidth = UIScreen.main.bounds.width
+        isAnimatingSwipe = true
+        withAnimation(.easeOut(duration: 0.15)) {
+            dragOffset = -(screenWidth + 60)
+            cardOpacity = 0.3
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
             dismiss()
+        }
+    }
+    
+    private func performSwipe(toNext: Bool) {
+        guard !isAnimatingSwipe else { return }
+        isAnimatingSwipe = true
+        
+        let screenWidth = UIScreen.main.bounds.width
+        let direction: CGFloat = toNext ? -1 : 1
+        
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        
+        // Phase 1: Fast exit — card flies off and fades
+        withAnimation(.easeOut(duration: 0.15)) {
+            dragOffset = direction * (screenWidth + 60)
+            cardOpacity = 0.4
+        }
+        
+        // Phase 2: Instant swap, then glide new card in
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            var t = Transaction(animation: nil)
+            withTransaction(t) {
+                currentIndex += toNext ? 1 : -1
+                resetState()
+                dragOffset = -direction * screenWidth * 0.25
+                cardOpacity = 0
+            }
+            
+            // Silky entrance — near-critically-damped spring + fade in
+            withAnimation(.spring(response: 0.38, dampingFraction: 0.92)) {
+                dragOffset = 0
+                cardOpacity = 1.0
+            }
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                isAnimatingSwipe = false
+            }
         }
     }
 }
@@ -284,12 +417,27 @@ struct FeedbackButton: View {
             .foregroundColor(color == .primaryGreen ? .white : color)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
-            .background(color == .primaryGreen ? color : Color.cardBackground)
+            .background {
+                ZStack {
+                    if color == .primaryGreen {
+                        color
+                    } else {
+                        Color.clear
+                            .background(.ultraThinMaterial)
+                    }
+                    
+                    RoundedRectangle(cornerRadius: 16)
+                        .strokeBorder(
+                            LinearGradient(
+                                colors: [Color.white.opacity(0.4), Color.clear],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 0.8
+                        )
+                }
+            }
             .cornerRadius(16)
-            .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(color.opacity(0.3), lineWidth: color == .primaryGreen ? 0 : 1)
-            )
         }
     }
 }

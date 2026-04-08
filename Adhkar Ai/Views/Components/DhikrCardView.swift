@@ -28,20 +28,61 @@ struct DhikrCardView: View {
     }
 
     var body: some View {
-        VStack(alignment: .trailing, spacing: 0) {
+        VStack(alignment: .center, spacing: 0) {
             // 1. Arabic Text (Top)
-            Text(dhikr.arabic)
-                .font(.custom(appState.arabicFontName == "System" ? "" : appState.arabicFontName, size: appState.arabicFontSize))
-                .lineSpacing(10) // Safe hardcoded spacing for Tashkeel clarity
-                .multilineTextAlignment(.trailing)
-                .environment(\.layoutDirection, .rightToLeft)
-                .foregroundColor(.textPrimary)
-                .frame(maxWidth: .infinity, alignment: .trailing)
-                .fixedSize(horizontal: false, vertical: true)
-                .lineLimit(nil)
+            VStack(alignment: .center, spacing: 0) {
+                let segmentation = ArabicTextProcessor.segment(text: dhikr.arabic)
+                
+                if let bismillah = segmentation.bismillah {
+                    Text(bismillah)
+                        .font(.system(size: appState.arabicFontSize * 0.9, weight: .medium, design: .serif))
+                        .foregroundColor(.primaryGreen)
+                        .multilineTextAlignment(.center)
+                        .padding(.top, 24)
+                        .padding(.bottom, 8)
+                    
+                    DashedLine()
+                        .stroke(style: StrokeStyle(lineWidth: 1, dash: [4]))
+                        .foregroundColor(.textSecondary.opacity(0.3))
+                        .frame(height: 1)
+                        .padding(.horizontal, 40)
+                        .padding(.bottom, 16)
+                }
+
+                // Main Arabic Content
+                DhikrFlowLayout(direction: .rightToLeft, spacing: 5) {
+                    ForEach(segmentation.ayahs) { ayah in
+                        let words = ayah.content.components(separatedBy: .whitespacesAndNewlines).filter { !$0.isEmpty }
+                        
+                        ForEach(0..<words.count, id: \.self) { index in
+                            Text(words[index])
+                                .font(.system(size: appState.arabicFontSize, weight: .regular, design: .serif))
+                                .foregroundColor(.textPrimary)
+                        }
+                        
+                        if let number = ayah.number {
+                            Text(number)
+                                .font(.system(size: appState.arabicFontSize * 0.6, weight: .bold, design: .rounded))
+                                .foregroundColor(.primaryGreen)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(
+                                    Capsule()
+                                        .fill(Color.primaryGreen.opacity(0.15))
+                                        .overlay(
+                                            Capsule()
+                                                .stroke(Color.primaryGreen.opacity(0.3), lineWidth: 0.5)
+                                        )
+                                )
+                                .shadow(color: Color.primaryGreen.opacity(0.1), radius: 2, x: 0, y: 1)
+                        }
+                    }
+                }
                 .padding(.horizontal, 16)
-                .padding(.top, 20)
-                .padding(.bottom, 12)
+                .padding(.top, segmentation.bismillah == nil ? 24 : 0)
+                .padding(.bottom, 16)
+            }
+            .frame(maxWidth: .infinity)
 
             // 2. English Content (Center)
             if isExpanded {
@@ -51,6 +92,7 @@ struct DhikrCardView: View {
                             .font(.system(size: appState.transliterationFontSize, weight: .regular, design: .rounded))
                             .italic()
                             .foregroundColor(.secondaryGreen)
+                            .multilineTextAlignment(.leading)
                             .lineLimit(nil)
                             .fixedSize(horizontal: false, vertical: true)
                     }
@@ -60,6 +102,7 @@ struct DhikrCardView: View {
                             .font(.system(size: appState.translationFontSize))
                             .foregroundColor(.textSecondary)
                             .lineSpacing(4)
+                            .multilineTextAlignment(.leading)
                             .lineLimit(nil)
                             .fixedSize(horizontal: false, vertical: true)
                     }
@@ -193,6 +236,68 @@ struct DhikrCardView: View {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
             showCompletionBurst = false
         }
+    }
+}
+
+// MARK: - Supporting Views
+
+struct DashedLine: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        path.move(to: CGPoint(x: rect.minX, y: rect.midY))
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.midY))
+        return path
+    }
+}
+
+struct DhikrFlowLayout: Layout {
+    var direction: LayoutDirection = .rightToLeft
+    var spacing: CGFloat = 8
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let width = proposal.width ?? UIScreen.main.bounds.width - 32
+        let result = layout(maxWidth: width, subviews: subviews)
+        return result.size
+    }
+
+    func placeSubviews(in rect: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let result = layout(maxWidth: rect.width, subviews: subviews)
+        for (index, subview) in subviews.enumerated() {
+            var point = result.points[index]
+            
+            // Mirror X if RTL
+            if direction == .rightToLeft {
+                let size = subview.sizeThatFits(.unspecified)
+                point.x = rect.width - point.x - size.width
+            }
+            
+            subview.place(at: CGPoint(x: rect.minX + point.x, y: rect.minY + point.y), proposal: .unspecified)
+        }
+    }
+
+    private func layout(maxWidth: CGFloat, subviews: Subviews) -> (size: CGSize, points: [CGPoint]) {
+        var currentX: CGFloat = 0
+        var currentY: CGFloat = 0
+        var maxRowHeight: CGFloat = 0
+        var points: [CGPoint] = Array(repeating: .zero, count: subviews.count)
+        
+        for index in 0..<subviews.count {
+            let size = subviews[index].sizeThatFits(.unspecified)
+            
+            // Logically calculate LTR flow first
+            if currentX + size.width > maxWidth && index > 0 {
+                currentX = 0
+                currentY += maxRowHeight + spacing
+                maxRowHeight = 0
+            }
+            
+            points[index] = CGPoint(x: currentX, y: currentY)
+            
+            currentX += (size.width + spacing)
+            maxRowHeight = max(maxRowHeight, size.height)
+        }
+        
+        return (CGSize(width: maxWidth, height: currentY + maxRowHeight), points)
     }
 }
 

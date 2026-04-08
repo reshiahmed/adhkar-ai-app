@@ -31,17 +31,27 @@ struct AppHeaderView: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
         .background(
-            ZStack(alignment: .bottom) {
-                Rectangle()
-                    .fill(.ultraThinMaterial)
-                    .ignoresSafeArea(edges: .top)
-                
-                // Subtle hairline divider for separation only when content scrolls under
-                Rectangle()
-                    .fill(Color.divider.opacity(0.3))
-                    .frame(height: 0.5)
-            }
+            Rectangle()
+                .fill(.ultraThinMaterial)
+                .ignoresSafeArea(edges: .top)
         )
+        .overlay(alignment: .top) {
+            // Light gradient to soften content as it scrolls under the header
+            LinearGradient(
+                colors: [Color.appBackground.opacity(0.98), Color.clear],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .frame(height: 60)
+            .ignoresSafeArea(edges: .top)
+            .allowsHitTesting(false)
+        }
+        .overlay(alignment: .bottom) {
+            // Subtle hairline divider for separation only when content scrolls under
+            Rectangle()
+                .fill(Color.divider.opacity(0.3))
+                .frame(height: 0.5)
+        }
     }
 }
 
@@ -71,12 +81,7 @@ struct ThemeToggleView: View {
             }
         }
         .padding(3)
-        .background(Color.appBackground)
-        .cornerRadius(9)
-        .overlay(
-            RoundedRectangle(cornerRadius: 9)
-                .stroke(Color.divider, lineWidth: 1)
-        )
+        .appHeaderGlassBackground(cornerRadius: 9)
     }
 }
 
@@ -99,6 +104,21 @@ struct ProgressBadgeView: View {
                 .foregroundColor(.textPrimary)
         }
         .frame(width: 52, height: 52)
+    }
+}
+
+// MARK: - Availability Helpers
+private extension View {
+    @ViewBuilder
+    func appHeaderGlassBackground(cornerRadius: CGFloat) -> some View {
+        if #available(iOS 26.0, *) {
+            self.glassEffect(.regular.interactive(), in: .rect(cornerRadius: cornerRadius))
+        } else {
+            self.background(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(.ultraThinMaterial)
+            )
+        }
     }
 }
 

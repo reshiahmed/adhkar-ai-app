@@ -5,6 +5,14 @@ struct MasterySummaryBadge: View {
     var body: some View {
         ZStack {
             Circle()
+                .fill(.ultraThinMaterial)
+                .frame(width: 52, height: 52)
+                .overlay {
+                    Circle()
+                        .strokeBorder(Color.white.opacity(0.3), lineWidth: 0.5)
+                }
+
+            Circle()
                 .stroke(Color.primaryGreen.opacity(0.1), lineWidth: 3)
                 .frame(width: 52, height: 52)
             

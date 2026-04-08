@@ -15,6 +15,11 @@ struct MasteryView: View {
     }
     
     @State private var sessionToShow: SessionConfig?
+
+    private func visibleItems(for category: AdhkarCategory) -> [Dhikr] {
+        let items = (category == .morning ? appState.morningAdhkar : appState.eveningAdhkar)
+        return items.filter { $0.isVisible }
+    }
     
     struct SessionConfig: Identifiable {
         let id = UUID()
@@ -81,14 +86,27 @@ struct MasteryView: View {
                             }
                             .foregroundColor(.white)
                             .padding(24)
-                            .background(
-                                LinearGradient(
-                                    colors: [Color.primaryGreen, Color(hex: "3CB87A")],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
+                            .background {
+                                ZStack {
+                                    LinearGradient(
+                                        colors: [Color.primaryGreen, Color(hex: "3CB87A")],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                    
+                                    // Liquid shine overlay
+                                    LinearGradient(
+                                        colors: [Color.white.opacity(0.35), Color.clear],
+                                        startPoint: .topLeading,
+                                        endPoint: .center
+                                    )
+                                }
+                            }
                             .cornerRadius(28)
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 28)
+                                    .strokeBorder(Color.white.opacity(0.35), lineWidth: 0.8)
+                            }
                             .cardShadow()
                         }
                         .padding(.horizontal, 24)
@@ -104,7 +122,12 @@ struct MasteryView: View {
                         VStack(spacing: 12) {
                             ForEach(MasteryCategory.allCases) { cat in
                                 MasteryCategoryCard(category: cat) { mode in
-                                    let items = appState.dueItems(for: cat.adhkarCategory)
+                                    let items: [Dhikr]
+                                    if mode == .review {
+                                        items = visibleItems(for: cat.adhkarCategory)
+                                    } else {
+                                        items = appState.dueItems(for: cat.adhkarCategory)
+                                    }
                                     sessionToShow = SessionConfig(items: items, mode: mode)
                                 }
                             }
@@ -154,8 +177,15 @@ struct MasteryStatBox: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 16)
-        .background(Color.cardBackground)
-        .cornerRadius(20)
+        .background {
+            ZStack {
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .fill(.ultraThinMaterial)
+                
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .strokeBorder(Color.white.opacity(0.4), lineWidth: 0.5)
+            }
+        }
         .cardShadow()
     }
 }
@@ -176,28 +206,33 @@ struct MasteryCategoryCard: View {
                     .foregroundColor(category.color)
             }
 
-            Text(category.rawValue)
-                .font(.system(size: 16, weight: .bold))
-                .foregroundColor(.textPrimary)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(category.rawValue)
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(.textPrimary)
+            }
 
             Spacer()
 
-            HStack(spacing: 8) {
+            VStack(spacing: 8) {
                 Button { onStartSession(.review) } label: {
                     Text("Review")
                         .font(.system(size: 13, weight: .bold))
                         .foregroundColor(.primaryGreen)
-                        .padding(.horizontal, 14)
+                        .padding(.horizontal, 16)
                         .padding(.vertical, 8)
+                        .frame(minWidth: 80)
                         .background(Color.primaryGreen.opacity(0.08))
                         .cornerRadius(12)
                 }
+
                 Button { onStartSession(.test) } label: {
                     Text("Test")
                         .font(.system(size: 13, weight: .bold))
                         .foregroundColor(.white)
-                        .padding(.horizontal, 14)
+                        .padding(.horizontal, 16)
                         .padding(.vertical, 8)
+                        .frame(minWidth: 80)
                         .background(Color.primaryGreen)
                         .cornerRadius(12)
                         .cardShadow()
@@ -205,8 +240,23 @@ struct MasteryCategoryCard: View {
             }
         }
         .padding(16)
-        .background(Color.cardBackground)
-        .cornerRadius(24)
+        .background {
+            ZStack {
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .fill(.ultraThinMaterial)
+                
+                // Colored rim-light matching category
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .strokeBorder(
+                        LinearGradient(
+                            colors: [category.color.opacity(0.6), category.color.opacity(0.1)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1.0
+                    )
+            }
+        }
         .cardShadow()
     }
 }

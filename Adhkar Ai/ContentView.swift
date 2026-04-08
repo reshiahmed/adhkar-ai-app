@@ -49,9 +49,28 @@ fileprivate struct MainTabView: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .transaction { $0.animation = nil }
             
             NavPill(selectedTab: $appState.selectedTab)
                 .padding(.bottom, 12) // Lowered from 34 for a more grounded feel
+                .zIndex(1)
+        }
+        .overlay(alignment: .top) {
+            // Single continuous fade from the very top to avoid visible seams
+            LinearGradient(
+                stops: [
+                    .init(color: Color.appBackground, location: 0.0),
+                    .init(color: Color.appBackground.opacity(0.92), location: 0.25),
+                    .init(color: Color.appBackground.opacity(0.55), location: 0.6),
+                    .init(color: Color.clear, location: 1.0)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .frame(height: 120)
+            .frame(maxWidth: .infinity)
+            .ignoresSafeArea(edges: .top)
+            .allowsHitTesting(false)
         }
         .ignoresSafeArea(.keyboard)
     }
@@ -88,49 +107,19 @@ fileprivate struct NavPill: View {
         .padding(.vertical, 7)
         .padding(.horizontal, 6)
         .background {
-            ZStack {
-                // Frosted glass base
+            if #available(iOS 26.0, *) {
                 Capsule()
-                    .fill(.ultraThinMaterial)
+                    .fill(Color.clear)
+                    .glassEffect(.regular.interactive())
+                    .opacity(0.8)
+            } else {
+                ZStack {
+                    Capsule()
+                        .fill(.ultraThinMaterial)
 
-                // Subtle body gradient — adds depth
-                Capsule()
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                Color.white.opacity(0.10),
-                                Color.clear,
-                                Color.black.opacity(0.05)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-
-                // Top-edge specular line — simulates curved glass catching light
-                Capsule()
-                    .fill(
-                        LinearGradient(
-                            colors: [Color.white.opacity(0.30), Color.clear],
-                            startPoint: .top,
-                            endPoint: .center
-                        )
-                    )
-
-                // Gradient border for rim-light realism
-                Capsule()
-                    .strokeBorder(
-                        LinearGradient(
-                            colors: [
-                                Color.white.opacity(0.50),
-                                Color.white.opacity(0.15),
-                                Color.white.opacity(0.05)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ),
-                        lineWidth: 0.75
-                    )
+                    Capsule()
+                        .strokeBorder(Color.white.opacity(0.25), lineWidth: 0.75)
+                }
             }
         }
         // Multi-layer depth shadow
@@ -138,6 +127,7 @@ fileprivate struct NavPill: View {
         .shadow(color: .black.opacity(0.06), radius: 6,  x: 0, y: 3)
         .shadow(color: Color.primaryGreen.opacity(0.10), radius: 18, x: 0, y: 5)
         .padding(.horizontal, 16)
+        .contentShape(Rectangle())
     }
 }
 
@@ -156,8 +146,8 @@ fileprivate struct NavPillTab: View {
                         .fill(
                             LinearGradient(
                                 colors: [
-                                    Color.primaryGreen.opacity(0.88),
-                                    Color.primaryGreen
+                                    Color.primaryGreen.opacity(0.5),
+                                    Color.primaryGreen.opacity(0.7)
                                 ],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing

@@ -98,6 +98,7 @@ class SupabaseClient {
     
     func upsertUserProgress(_ progress: [RawUserProgress]) async throws {
         let url = baseURL.appendingPathComponent("rest/v1/user_progress")
+            .appending(queryItems: [URLQueryItem(name: "on_conflict", value: "user_id,adhkar_id")])
         _ = try await post(url: url, body: progress, upsert: true)
     }
     
@@ -113,6 +114,7 @@ class SupabaseClient {
     
     func upsertUserStats(_ stats: RawUserStats) async throws {
         let url = baseURL.appendingPathComponent("rest/v1/user_stats")
+            .appending(queryItems: [URLQueryItem(name: "on_conflict", value: "user_id")])
         _ = try await post(url: url, body: [stats], upsert: true)
     }
     
@@ -129,6 +131,7 @@ class SupabaseClient {
     
     func upsertCustomAdhkar(_ adhkar: [RawCustomAdhkar]) async throws {
         let url = baseURL.appendingPathComponent("rest/v1/custom_adhkar")
+            .appending(queryItems: [URLQueryItem(name: "on_conflict", value: "id")])
         _ = try await post(url: url, body: adhkar, upsert: true)
     }
 
@@ -257,6 +260,20 @@ struct RawCustomAdhkar: Codable {
     let benefit: String?
     let pin_to: String?
     let source: String?
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(user_id, forKey: .user_id)
+        try container.encode(arabic, forKey: .arabic)
+        // Explicitly use .encode() instead of synthesized .encodeIfPresent()
+        // This ensures the key is always present in JSON (even as null)
+        try container.encode(transliteration, forKey: .transliteration)
+        try container.encode(translation, forKey: .translation)
+        try container.encode(benefit, forKey: .benefit)
+        try container.encode(pin_to, forKey: .pin_to)
+        try container.encode(source, forKey: .source)
+    }
 }
 
 enum AuthError: Error {

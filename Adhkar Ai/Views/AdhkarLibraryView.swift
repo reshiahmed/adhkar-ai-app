@@ -122,7 +122,7 @@ struct CustomDhikrCard: View {
             Text(dhikr.arabic)
                 .font(.system(size: AppFont.arabicMedium, weight: .regular))
                 .foregroundColor(.textPrimary)
-                .multilineTextAlignment(.trailing)
+                .multilineTextAlignment(.leading) // .leading in RTL = Right Alignment
                 .frame(maxWidth: .infinity, alignment: .trailing)
                 .lineSpacing(8)
                 .environment(\.layoutDirection, .rightToLeft)

@@ -62,6 +62,10 @@ enum AdhkarCategory: String, Codable, CaseIterable, Identifiable {
     case mosque        = "mosque"
     case greeting      = "greeting"
     case sneezing      = "sneezing"
+    case home          = "home"
+    case wudu          = "wudu"
+    case afterPrayer   = "afterPrayer"
+    case afterAdhan    = "afterAdhan"
     case custom        = "custom"
 
     var displayName: String {
@@ -78,6 +82,10 @@ enum AdhkarCategory: String, Codable, CaseIterable, Identifiable {
         case .mosque:          return "Mosque"
         case .greeting:        return "Greetings"
         case .sneezing:        return "Sneezing"
+        case .home:            return "Home"
+        case .wudu:            return "Wudu"
+        case .afterPrayer:     return "After Prayer"
+        case .afterAdhan:      return "After Adhan"
         case .custom:          return "My Library"
         }
     }
@@ -96,6 +104,10 @@ enum AdhkarCategory: String, Codable, CaseIterable, Identifiable {
         case .mosque:          return "🕌"
         case .greeting:        return "👋"
         case .sneezing:        return "🤧"
+        case .home:            return "🏠"
+        case .wudu:            return "💧"
+        case .afterPrayer:     return "🤲"
+        case .afterAdhan:      return "🔔"
         case .custom:          return "📚"
         }
     }

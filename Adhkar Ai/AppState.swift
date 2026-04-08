@@ -23,11 +23,13 @@ class AppState: ObservableObject {
         static let showSearchBars = "adhkar.showSearchBars"
         static let hasCompletedOnboarding = "adhkar.hasCompletedOnboarding"
         static let hasCompletedTour = "adhkar.hasCompletedTour"
+        static let lastProgressReset = "adhkar.lastProgressReset"
     }
 
     private let defaults = UserDefaults.standard
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
+    private var cancellables = Set<AnyCancellable>()
 
     // MARK: - Auth & Sync
     @Published var isLoggedIn: Bool = false
@@ -46,6 +48,13 @@ class AppState: ObservableObject {
     @Published var hasCompletedTour: Bool = false {
         didSet {
             defaults.set(hasCompletedTour, forKey: StorageKey.hasCompletedTour)
+        }
+    }
+    @Published var lastProgressReset: Date? {
+        didSet {
+            if let date = lastProgressReset {
+                defaults.set(date, forKey: StorageKey.lastProgressReset)
+            }
         }
     }
 
@@ -259,8 +268,69 @@ class AppState: ObservableObject {
         
         hasCompletedOnboarding = defaults.bool(forKey: StorageKey.hasCompletedOnboarding)
         hasCompletedTour = defaults.bool(forKey: StorageKey.hasCompletedTour)
+        lastProgressReset = defaults.object(forKey: StorageKey.lastProgressReset) as? Date
         
         setupCategories()
+        checkDailyReset()
+        setupNotificationObservers()
+    }
+
+    private func setupNotificationObservers() {
+        NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.checkDailyReset()
+            }
+            .store(in: &cancellables)
+    }
+
+    func checkDailyReset() {
+        let calendar = Calendar.current
+        let now = Date()
+        
+        guard let lastReset = lastProgressReset else {
+            // First run on this device. 
+            // If we have no progress history locally, we can safely set now.
+            // If we DO have history but no lastReset (legacy upgrade), we should reset once.
+            if progressHistory.isEmpty && (morningAdhkar.allSatisfy { $0.currentCount == 0 }) {
+                lastProgressReset = now
+            } else {
+                resetAllDailyProgress()
+                lastProgressReset = now
+            }
+            return
+        }
+        
+        // Only reset if today is officially a DIFFERENT day than last reset.
+        if !calendar.isDate(lastReset, inSameDayAs: now) {
+            // Logically, any progress still in the arrays belongs to 'lastReset' day.
+            // But upsertTodayProgress always uses Date(). 
+            // To ensure the previous day's final progress is recorded correctly, 
+            // we'd need to know what day it was.
+            
+            resetAllDailyProgress()
+            lastProgressReset = now
+        }
+    }
+
+    private func resetAllDailyProgress() {
+        withAnimation(.spring()) {
+            for i in 0..<morningAdhkar.count { morningAdhkar[i].reset() }
+            for i in 0..<eveningAdhkar.count { eveningAdhkar[i].reset() }
+            
+            for i in 0..<dailyCategories.count {
+                for j in 0..<dailyCategories[i].adhkar.count {
+                    dailyCategories[i].adhkar[j].reset()
+                }
+            }
+            
+            // Sync current dailyCategories state back to dailyAdhkarStore
+            for cat in dailyCategories {
+                dailyAdhkarStore[cat.category.rawValue] = cat.adhkar
+            }
+            
+            persistState()
+        }
     }
 
     // MARK: - Progress Helpers
@@ -606,11 +676,38 @@ class AppState: ObservableObject {
             if let stats = try await SupabaseClient.shared.fetchUserStats() {
                 await MainActor.run {
                     if let data = stats.activity_history.data(using: .utf8),
-                       let history = try? JSONDecoder().decode([String: DailyProgressEntryProxy].self, from: data) {
-                        self.progressHistory = history.compactMap { (key, proxy) -> DailyProgressEntry? in
-                            guard let date = f.date(from: key) else { return nil }
-                            return DailyProgressEntry(date: date, morningCompleted: proxy.m, eveningCompleted: proxy.e, completionRatio: proxy.r ?? 0)
-                        }.sorted { $0.date < $1.date }
+                       let cloudHistory = try? JSONDecoder().decode([String: DailyProgressEntryProxy].self, from: data) {
+                        
+                        // Merge Cloud History with Local History (Date-based)
+                        let f = DateFormatter()
+                        f.dateFormat = "yyyy-MM-dd"
+                        
+                        // 1. Convert current local progress to a dictionary for easy merging
+                        var merged = Dictionary(uniqueKeysWithValues: self.progressHistory.map {
+                            (f.string(from: $0.date), $0)
+                        })
+                        
+                        // 2. Overwrite/Add cloud entries (only if they have more/newer info or are missing)
+                        for (key, proxy) in cloudHistory {
+                            guard let date = f.date(from: key) else { continue }
+                            let cloudEntry = DailyProgressEntry(
+                                date: date,
+                                morningCompleted: proxy.m,
+                                eveningCompleted: proxy.e,
+                                completionRatio: proxy.r ?? 0
+                            )
+                            
+                            if let existing = merged[key] {
+                                // Keep the one with better completion ratio
+                                if cloudEntry.completionRatio > existing.completionRatio {
+                                    merged[key] = cloudEntry
+                                }
+                            } else {
+                                merged[key] = cloudEntry
+                            }
+                        }
+                        
+                        self.progressHistory = Array(merged.values).sorted { $0.date < $1.date }
                     }
                 }
             }
@@ -635,6 +732,7 @@ class AppState: ObservableObject {
                 isSyncing = false
                 syncStatus = "Saved"
                 persistState()
+                checkDailyReset() // Ensure sync doesn't overwrite a needed reset
             }
         } catch {
             print("⚠️ Sync From Cloud failed: \(error)")
@@ -653,9 +751,9 @@ class AppState: ObservableObject {
         do {
             let f = DateFormatter()
             f.dateFormat = "yyyy-MM-dd"
-            let historyProxy = Dictionary(uniqueKeysWithValues: progressHistory.map {
+            let historyProxy = Dictionary(progressHistory.map {
                 (f.string(from: $0.date), DailyProgressEntryProxy(m: $0.morningCompleted, e: $0.eveningCompleted, r: $0.completionRatio))
-            })
+            }, uniquingKeysWith: { (first, _) in first })
             
             let stats = RawUserStats(
                 user_id: userProfile.id,
@@ -721,16 +819,25 @@ class AppState: ObservableObject {
     private func upsertTodayProgress() {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
-        let todayEntry = DailyProgressEntry(
-            date: today,
-            morningCompleted: morningAllDone,
-            eveningCompleted: eveningAllDone,
-            completionRatio: dailyCompletionRatio
-        )
+        
+        let newRatio = dailyCompletionRatio
+        let mDone = morningAllDone
+        let eDone = eveningAllDone
 
         if let index = progressHistory.firstIndex(where: { calendar.isDate($0.date, inSameDayAs: today) }) {
-            progressHistory[index] = todayEntry
+            var existing = progressHistory[index]
+            // Preserve 'completed' status once achieved for the day
+            existing.morningCompleted = existing.morningCompleted || mDone
+            existing.eveningCompleted = existing.eveningCompleted || eDone
+            existing.completionRatio = max(existing.completionRatio, newRatio)
+            progressHistory[index] = existing
         } else {
+            let todayEntry = DailyProgressEntry(
+                date: today,
+                morningCompleted: mDone,
+                eveningCompleted: eDone,
+                completionRatio: newRatio
+            )
             progressHistory.append(todayEntry)
             progressHistory.sort { $0.date < $1.date }
         }
